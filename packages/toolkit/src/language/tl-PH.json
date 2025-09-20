@@ -1,0 +1,28 @@
+{
+  "title": "Module ng Toolkit",
+  "subtitle": "Maligayang pagdating sa pahina ng demo ng toolkit",
+  "item1": "Lumikha ng bagong module gamit ang CLI",
+  "item2": "I-install ang mga dependency at i-configure ang routing",
+  "item3": "Patakbuhin ang dev server gamit ang hot reload",
+  "item4": "Idagdag ang iyong unang component sa ilalim ng `src/components`",
+  "item5": "Sumulat ng Storybook stories para sa bawat component",
+  "item6": "Itakda ang module federation entry point",
+  "item7": "I-define ang shared dependencies sa webpack.config.js",
+  "item8": "I-export ang iyong public API mula sa `index.ts`",
+  "item9": "Gamitin ang iyong module sa host sa pamamagitan ng `remote-toolkit/App`",
+  "item10": "I-update ang bersyon ng iyong module at i-redeploy",
+  "item11": "Magdagdag ng mga pagsasalin sa `src/language/<lang>.json`",
+  "item12": "Magpalit ng wika sa runtime gamit ang Context",
+  "item13": "I-optimize ang laki ng bundle gamit ang code-splitting",
+  "item14": "Sumulat ng unit tests gamit ang Jest at React Testing Library",
+  "item15": "Idokumento ang paggamit sa iyong README.md",
+  "item16": "I-publish sa iyong private NPM registry",
+  "item17": "Kunin ang mga update mula sa iyong CI/CD pipeline",
+  "item18": "Subaybayan ang performance sa production",
+  "item19": "Magdagdag ng feature-flags para sa eksperimento",
+  "item20": "Linisin nang regular ang hindi nagagamit na mga dependency",
+  "nested": {
+    "header": "Malalim na Demo ng Object",
+    "description": "Ang tekstong ito ay nakapaloob sa isang object upang subukan ang malalim na lookup."
+  }
+}

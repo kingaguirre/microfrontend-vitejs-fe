@@ -1,0 +1,28 @@
+{
+  "title": "工具包模块",
+  "subtitle": "欢迎来到工具包演示页面",
+  "item1": "使用 CLI 创建新模块",
+  "item2": "安装依赖并配置路由",
+  "item3": "使用热重载运行开发服务器",
+  "item4": "在 `src/components` 下添加您的第一个组件",
+  "item5": "为每个组件编写 Storybook 示例",
+  "item6": "设置模块联邦入口点",
+  "item7": "在 webpack.config.js 中定义共享依赖",
+  "item8": "从 `index.ts` 导出您的公共 API",
+  "item9": "通过 `remote-toolkit/App` 在主机中使用您的模块",
+  "item10": "更新模块版本并重新部署",
+  "item11": "在 `src/language/<lang>.json` 中添加翻译",
+  "item12": "使用 Context 在运行时切换语言",
+  "item13": "通过代码拆分优化包大小",
+  "item14": "使用 Jest 和 React Testing Library 编写单元测试",
+  "item15": "在 README.md 中记录使用方法",
+  "item16": "发布到您的私有 NPM 注册表",
+  "item17": "从您的 CI/CD 管道获取更新",
+  "item18": "在生产环境中监控性能",
+  "item19": "为实验性工作添加功能标志",
+  "item20": "定期清理未使用的依赖",
+  "nested": {
+    "header": "深度对象演示",
+    "description": "此文本嵌套在对象中以测试深度查找。"
+  }
+}

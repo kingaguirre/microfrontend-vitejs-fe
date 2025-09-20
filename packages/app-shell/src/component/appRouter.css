@@ -1,0 +1,12 @@
+/* AppRouter.css */
+.fade-transition {
+  will-change: opacity;
+  transition: opacity 100ms ease-in-out;
+  opacity: 1;
+}
+.fade-transition.fade-out {
+  opacity: 0;
+}
+.fade-transition.fade-in {
+  opacity: 1;
+}

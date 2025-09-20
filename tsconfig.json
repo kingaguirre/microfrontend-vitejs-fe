@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@app/app-shell": ["packages/app-shell/src"],
+      "@app/app-shell/*": ["packages/app-shell/src/*"],
+      "@components/*": [
+        "packages/app-shell/src/components/*",
+        "@components/*",
+        "packages/toolkit/src/components/*",
+        "packages/query/src/components/*"
+      ],
+      "@app/common/*": ["packages/common/src/*"]
+    }
+  },
+  "include": ["packages", "**/*.json"]
+}

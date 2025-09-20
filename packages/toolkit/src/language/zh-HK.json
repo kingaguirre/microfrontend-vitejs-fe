@@ -1,0 +1,28 @@
+{
+  "title": "工具包模組",
+  "subtitle": "歡迎來到工具包示範頁面",
+  "item1": "使用 CLI 創建新模組",
+  "item2": "安裝依賴並配置路由",
+  "item3": "使用熱重載運行開發伺服器",
+  "item4": "在 `src/components` 下添加您的第一個組件",
+  "item5": "為每個組件編寫 Storybook 範例",
+  "item6": "設置模組聯邦入口點",
+  "item7": "在 webpack.config.js 中定義共享依賴",
+  "item8": "從 `index.ts` 導出您的公共 API",
+  "item9": "通過 `remote-toolkit/App` 在主機中使用您的模組",
+  "item10": "更新模組版本並重新部署",
+  "item11": "在 `src/language/<lang>.json` 中添加翻譯",
+  "item12": "使用 Context 在運行時切換語言",
+  "item13": "通過程式碼拆分優化包大小",
+  "item14": "使用 Jest 和 React Testing Library 編寫單元測試",
+  "item15": "在 README.md 中記錄使用方法",
+  "item16": "發佈到您的私人 NPM 註冊表",
+  "item17": "從您的 CI/CD 管道獲取更新",
+  "item18": "在生產環境中監控性能",
+  "item19": "為實驗性工作添加功能標誌",
+  "item20": "定期清理未使用的依賴",
+  "nested": {
+    "header": "深度物件示範",
+    "description": "此文本嵌套在對象中以測試深度查找。"
+  }
+}

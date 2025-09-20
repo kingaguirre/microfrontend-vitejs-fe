@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/toolkit/(.*)", "destination": "/index.html" }]
+}

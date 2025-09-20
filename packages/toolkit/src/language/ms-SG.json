@@ -1,0 +1,28 @@
+{
+  "title": "Modul Alat",
+  "subtitle": "Selamat datang ke halaman demo alat",
+  "item1": "Cipta modul baru menggunakan CLI",
+  "item2": "Pasang kebergantungan dan konfigurasikan routing",
+  "item3": "Jalankan pelayan dev dengan muat semula panas",
+  "item4": "Tambah komponen pertama anda di bawah `src/components`",
+  "item5": "Tulis cerita Storybook untuk setiap komponen",
+  "item6": "Sediakan titik kemasukan module federation",
+  "item7": "Definisikan kebergantungan dikongsi dalam webpack.config.js",
+  "item8": "Eksport API awam anda dari `index.ts`",
+  "item9": "Gunakan modul anda dalam hos melalui `remote-toolkit/App`",
+  "item10": "Kemas kini versi modul anda dan terbit semula",
+  "item11": "Tambah terjemahan dalam `src/language/<lang>.json`",
+  "item12": "Tukar bahasa pada masa nyata menggunakan Context",
+  "item13": "Optimumkan saiz bundel dengan code-splitting",
+  "item14": "Tulis ujian unit dengan Jest & React Testing Library",
+  "item15": "Dokumentasikan penggunaan dalam README.md anda",
+  "item16": "Terbitkan ke registri NPM peribadi anda",
+  "item17": "Gunakan kemas kini dari saluran CI/CD anda",
+  "item18": "Pantau prestasi dalam produksi",
+  "item19": "Tambah feature-flags untuk kerja eksperimen",
+  "item20": "Bersihkan kebergantungan yang tidak digunakan secara berkala",
+  "nested": {
+    "header": "Demo Objek Mendalam",
+    "description": "Teks ini tertanam dalam objek untuk menguji pencarian mendalam."
+  }
+}

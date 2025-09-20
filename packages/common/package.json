@@ -1,0 +1,13 @@
+{
+  "name": "@app/common",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "axios": "^1.9.0",
+    "graphql-request": "^7.2.0",
+    "graphql": "^16.11.0",
+    "zustand": "^5.0.5"
+  }
+}

@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ensure borders/shadows don’t resize the box */
+  .app-shell-main-content,
+  .app-shell-main-content * {
+    @apply box-border;
+  }
+
+  /* any element you mark for scrolling into view will smoothly animate */
+  .app-shell-main-content [data-scroll-to-view] {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  /* globally style all <code> elements */
+  code {
+    @apply text-pink-500;
+  }
+
+  .login-form .form-control-input-container > span {
+    @apply text-white;
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "title": "Toolkit Module",
+  "subtitle": "Welcome to the toolkit demo page",
+  "item1": "Create a new module using the CLI",
+  "item2": "Install dependencies and configure routing",
+  "item3": "Run the dev server with hot reload",
+  "item4": "Add your first component under `src/components`",
+  "item5": "Write Storybook stories for each component",
+  "item6": "Set up module federation entry point",
+  "item7": "Define shared dependencies in webpack.config.js",
+  "item8": "Export your public API from `index.ts`",
+  "item9": "Use your module in host via `remote-toolkit/App`",
+  "item10": "Update your module version and redeploy",
+  "item11": "Add translations in `src/language/<lang>.json`",
+  "item12": "Switch languages at runtime using the Context",
+  "item13": "Optimize bundle size with code-splitting",
+  "item14": "Write unit tests with Jest & React Testing Library",
+  "item15": "Document usage in your README.md",
+  "item16": "Publish to your private NPM registry",
+  "item17": "Consume updates from your CI/CD pipeline",
+  "item18": "Monitor performance in production",
+  "item19": "Add feature-flags for experimental work",
+  "item20": "Clean up unused dependencies regularly",
+  "nested": {
+    "header": "Deep Object Demo",
+    "description": "This text is nestled inside an object to test deep lookup."
+  }
+}

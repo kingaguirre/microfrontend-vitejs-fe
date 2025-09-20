@@ -1,0 +1,157 @@
+{
+  "moduleName": "setup",
+  "pageTitle": "Setup",
+  "config": {
+    "menuIcon": "settings",
+    "setupMenu": [
+      {
+        "id": "setup",
+        "title": "setup",
+        "icon": "settings",
+        "path": "/setup",
+        "children": [
+          {
+            "id": "booking-location-maintenance",
+            "title": "booking location maintenance",
+            "icon": "location_pin",
+            "keywords": [
+              "location",
+              "booking"
+            ],
+            "path": "/setup/booking-location-maintenance"
+          },
+          {
+            "id": "branch-maintenance",
+            "title": "branch maintenance",
+            "icon": "home_work",
+            "path": "/setup/branch-maintenance"
+          },
+          {
+            "id": "rda-rma-enquiry",
+            "title": "rda rma enquiry",
+            "icon": "search",
+            "path": "/setup/rda-rma-enquiry"
+          },
+          {
+            "id": "map-data-value",
+            "title": "map data value",
+            "icon": "map",
+            "path": "/setup/map-data-value"
+          },
+          {
+            "id": "advice-setup-enquiry",
+            "title": "advice setup enquiry",
+            "icon": "message",
+            "path": "/setup/advice-setup-enquiry"
+          },
+          {
+            "id": "tracer-enquiry",
+            "title": "tracer enquiry",
+            "icon": "track_changes",
+            "path": "/setup/tracer-enquiry"
+          },
+          {
+            "id": "clause-enquiry",
+            "title": "clause enquiry",
+            "icon": "upload_file",
+            "path": "/setup/clause-enquiry"
+          },
+          {
+            "id": "brdm-enquiry",
+            "title": "brdm enquiry",
+            "icon": "layers",
+            "path": "/setup/brdm-enquiry"
+          },
+          {
+            "id": "code-data-value",
+            "title": "code data value",
+            "icon": "code",
+            "path": "/setup/code-data-value"
+          },
+          {
+            "id": "interest-base-rate-maintenance",
+            "title": "interest base rate maintenance",
+            "icon": "show_chart",
+            "path": "/setup/interest-base-rate-maintenance"
+          },
+          {
+            "id": "fx-rate-maintenance",
+            "title": "fx rate maintenance",
+            "icon": "attach_money",
+            "path": "/setup/fx-rate-maintenance"
+          },
+          {
+            "id": "holiday-maintenance",
+            "title": "holiday maintenance",
+            "icon": "calendar_today",
+            "path": "/setup/holiday-maintenance"
+          }
+        ]
+      },
+      {
+        "id": "client-setup",
+        "title": "client setup",
+        "icon": "users",
+        "path": "/client-setup",
+        "children": [
+          {
+            "id": "customer-maintenance",
+            "title": "customer maintenance",
+            "icon": "supervised_user_circle",
+            "path": "/client-setup/customer-maintenance"
+          },
+          {
+            "id": "client-preferences",
+            "title": "client preferences",
+            "icon": "supervisor_account",
+            "path": "/client-setup/client-preferences"
+          },
+          {
+            "id": "client-setup-leaf",
+            "title": "client setup",
+            "icon": "person_add_alt_1",
+            "path": "/client-setup/client-setup"
+          },
+          {
+            "id": "bca-terms-conditions-maintenance",
+            "title": "bca terms & conditions maintenance",
+            "icon": "developer_board",
+            "path": "/client-setup/bca-terms-conditions-maintenance"
+          },
+          {
+            "id": "client-profile",
+            "title": "client profile",
+            "icon": "person_search",
+            "path": "/client-setup/client-profile"
+          },
+          {
+            "id": "cre-enquiry",
+            "title": "client ready to transact enquiry (CRE)",
+            "icon": "perm_contact_calendar",
+            "path": "/client-setup/cre-enquiry"
+          }
+        ]
+      },
+      {
+        "id": "global-party",
+        "title": "global party",
+        "icon": "globe",
+        "path": "/global-party"
+      },
+      {
+        "id": "product-setup",
+        "title": "product setup",
+        "icon": "inbox",
+        "path": "/product-setup",
+        "children": [
+          {
+            "id": "product-details",
+            "title": "product details",
+            "icon": "search",
+            "path": "/product-setup/product-details"
+          }
+        ]
+      }
+    ]
+  }
+}

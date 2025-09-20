@@ -1,0 +1,53 @@
+{
+  "moduleName": "toolkit",
+  "pageTitle": "Toolkit Module",
+  "pageName": "Test",
+  "subMenu": [
+    {
+      "id": "home",
+      "title": "Home",
+      "path": "/toolkit/home",
+      "icon": "home",
+      "badge": { "icon": "star", "color": "warning" }
+    },
+    {
+      "id": "about",
+      "title": "About",
+      "path": "/toolkit/about",
+      "icon": "info",
+      "badge": { "color": "primary", "value": 1 }
+    },
+    {
+      "id": "settings",
+      "title": "Settings",
+      "icon": "settings",
+      "badge": { "color": "success", "value": 2 },
+      "children": [
+        {
+          "id": "profile",
+          "title": "Profile",
+          "path": "/settings/profile",
+          "icon": "person",
+          "badge": { "icon": "person_outline" }
+        },
+        {
+          "id": "security",
+          "title": "Security",
+          "path": "/settings/security",
+          "icon": "lock",
+          "badge": { "color": "danger", "value": 3 }
+        }
+      ]
+    }
+  ],
+  "cloudConfig": { "endpoint": "https://jsonplaceholder.typicode.com/todos/1" },
+  "config": {
+    "userId": "1234",
+    "title": "Toolkit",
+    "defaultPath": "/toolkit",
+    "featureFlags": { "experiments": true, "refunds": false },
+    "permissions": ["toolkit:read"],
+    "i18nNamespaces": ["toolkit", "common"],
+    "runtime": { "apiBase": "/api/toolkit" }
+  }
+}

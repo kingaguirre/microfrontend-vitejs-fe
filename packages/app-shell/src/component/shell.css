@@ -1,0 +1,13 @@
+.content-wrapper {
+  will-change: opacity;
+  transition: opacity 100ms ease-in-out;
+  opacity: 1;
+}
+
+.content-wrapper.fade-out {
+  opacity: 0;
+}
+
+.content-wrapper.fade-in {
+  opacity: 1;
+}

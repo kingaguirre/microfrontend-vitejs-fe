@@ -1,0 +1,59 @@
+{
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {
+    "axios": "^1.9.0",
+    "graphql": "^16.11.0",
+    "graphql-request": "^7.2.0",
+    "react-components-lib.eaa": "^1.0.6",
+    "zustand": "^5.0.5"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "concurrently": "^9.1.2",
+    "cross-spawn": "^7.0.6",
+    "detect-port": "^2.1.0",
+    "eslint": "^9.31.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.3",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "prettier": "^3.5.3",
+    "vitest": "^3.2.4"
+  },
+  "scripts": {
+    "remove-module": "node scripts/remove-module.js",
+    "create-module": "node scripts/create-module.js",
+    "fix": "eslint . --ext .ts,.tsx --fix && prettier --write \"**/*.{json,css,md}\"",
+    "check": "eslint . --ext .ts,.tsx && prettier --check \"**/*.{json,css,md}\"",
+    "shell": "npm run start --workspace=packages/app-shell",
+    "shell:test": "npm run test --workspace=packages/app-shell",
+    "shell:test:watch": "npm run test:watch --workspace=packages/app-shell",
+    "shell:test:coverage": "npm run test:coverage --workspace=packages/app-shell",
+    "toolkit": "npm run start --workspace=packages/toolkit",
+    "toolkit:local": "npm run serve:local --workspace=packages/toolkit",
+    "toolkit:build": "npm run build --workspace=packages/toolkit",
+    "toolkit:test": "npm run test --workspace=packages/toolkit",
+    "toolkit:test:watch": "npm run test:watch --workspace=packages/toolkit",
+    "toolkit:test:coverage": "npm run test:coverage --workspace=packages/toolkit",
+    "query": "npm run start --workspace=packages/query",
+    "query:local": "npm run serve:local --workspace=packages/query",
+    "query:build": "npm run build --workspace=packages/query",
+    "query:test": "npm run test --workspace=packages/query",
+    "query:test:watch": "npm run test:watch --workspace=packages/query",
+    "query:test:coverage": "npm run test:coverage --workspace=packages/query",
+    "app-shell:build": "npm run build --workspace=packages/app-shell",
+    "start": "concurrently \"npm run shell\" \"npm run toolkit:local\" \"npm run query:local\" \"npx wait-on http://localhost:3000 && npx open-cli http://localhost:3000\""
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
