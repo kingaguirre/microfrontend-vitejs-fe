@@ -1,58 +1,62 @@
 // src/components/ModuleContainer.tsx
-import React, { useMemo } from "react";
-import { useLocation } from "react-router-dom";
-import { Icon, Button } from "react-components-lib.eaa";
-import { useModuleConfig } from "@app/common";
-import moduleConfig from "../module.config.json";
-import type { ButtonProps } from "react-components-lib.eaa";
+import React, { useMemo } from 'react'
+import { useLocation } from 'react-router-dom'
+import { Icon, Button } from 'react-components-lib.eaa'
+import { useModuleConfig } from '@app/common'
+import moduleConfig from '../module.config.json'
+import type { ButtonProps } from 'react-components-lib.eaa'
 
 type Props = {
-  title: string;
-  onBack?: () => void;
-  className?: string;
-  children: React.ReactNode;
-  right?: React.ReactNode;
-  showFooter?: boolean;
-  footerLeftButtons?: ButtonProps[];
-  footerRightButtons?: ButtonProps[];
-};
+  title: string
+  onBack?: () => void
+  className?: string
+  children: React.ReactNode
+  right?: React.ReactNode
+  showFooter?: boolean
+  footerLeftButtons?: ButtonProps[]
+  footerRightButtons?: ButtonProps[]
+}
 
 type MenuNode = {
-  id?: string;
-  title?: string;
-  label?: string;
-  icon?: string;
-  path?: string;
-  children?: MenuNode[];
-};
+  id?: string
+  title?: string
+  label?: string
+  icon?: string
+  path?: string
+  children?: MenuNode[]
+}
 
 const slugify = (s: string) =>
-  String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+  String(s)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
 const toTitleCase = (s: string) => {
-  const cleaned = String(s).replace(/[-_]+/g, " ").trim();
-  if (!cleaned) return "";
+  const cleaned = String(s).replace(/[-_]+/g, ' ').trim()
+  if (!cleaned) return ''
   return cleaned
     .split(/\s+/)
     .map((t) => (/^[A-Z0-9]{2,5}$/.test(t) ? t : t.charAt(0).toUpperCase() + t.slice(1)))
-    .join(" ");
-};
+    .join(' ')
+}
 
 // Layout constants
-const HEADER_BASE = 162;
-const FOOTER_HEIGHT = 56;
-const FOOTER_SIDE_INSET = 16;
-const FOOTER_BOTTOM = 0;
-const BODY_EXTRA = 16;
+const HEADER_BASE = 162
+const FOOTER_HEIGHT = 56
+const FOOTER_SIDE_INSET = 16
+const FOOTER_BOTTOM = 0
+const BODY_EXTRA = 16
 
 function flatten(nodes?: MenuNode[] | null): MenuNode[] {
-  const out: MenuNode[] = [];
-  const stack = Array.isArray(nodes) ? [...nodes] : [];
+  const out: MenuNode[] = []
+  const stack = Array.isArray(nodes) ? [...nodes] : []
   while (stack.length) {
-    const n = stack.shift()!;
-    out.push(n);
-    if (Array.isArray(n.children) && n.children.length) stack.unshift(...n.children);
+    const n = stack.shift()!
+    out.push(n)
+    if (Array.isArray(n.children) && n.children.length) stack.unshift(...n.children)
   }
-  return out;
+  return out
 }
 
 export default function ModuleContainer({
@@ -63,42 +67,41 @@ export default function ModuleContainer({
   right,
   showFooter = true,
   footerLeftButtons,
-  footerRightButtons,
+  footerRightButtons
 }: Props) {
-  const location = useLocation();
+  const location = useLocation()
 
   // required pattern
-  const config = useModuleConfig(moduleConfig.moduleName) as any;
-  const setupMenu: MenuNode[] = (config?.config?.setupMenu as MenuNode[]) ?? [];
+  const config = useModuleConfig(moduleConfig.moduleName) as any
+  const setupMenu: MenuNode[] = (config?.config?.setupMenu as MenuNode[]) ?? []
 
   const { parentLabel, pageLabel } = useMemo(() => {
-    const moduleSlug =
-      (moduleConfig?.moduleName || location.pathname.split("/")[1] || "").trim();
-    const parent = toTitleCase(moduleSlug || "module");
+    const moduleSlug = (moduleConfig?.moduleName || location.pathname.split('/')[1] || '').trim()
+    const parent = toTitleCase(moduleSlug || 'module')
 
-    const path = location.pathname;
-    const lastSeg = slugify(path.split("/").filter(Boolean).pop() || "");
+    const path = location.pathname
+    const lastSeg = slugify(path.split('/').filter(Boolean).pop() || '')
 
-    const flat = flatten(setupMenu);
+    const flat = flatten(setupMenu)
     const hit =
       flat.find((n) => n?.path === path) ||
-      flat.find((n) => slugify(String(n?.title || n?.label || "")) === lastSeg) ||
-      null;
+      flat.find((n) => slugify(String(n?.title || n?.label || '')) === lastSeg) ||
+      null
 
     const page = toTitleCase(
-      (hit?.title || hit?.label || title || lastSeg.replace(/-/g, " ")) as string
-    );
+      (hit?.title || hit?.label || title || lastSeg.replace(/-/g, ' ')) as string
+    )
 
-    return { parentLabel: parent, pageLabel: page };
-  }, [setupMenu, location.pathname, title]);
+    return { parentLabel: parent, pageLabel: page }
+  }, [setupMenu, location.pathname, title])
 
-  const noLeft = !footerLeftButtons || footerLeftButtons.length === 0;
-  const noRight = !footerRightButtons || footerRightButtons.length === 0;
-  const useDefaultClose = showFooter && noLeft && noRight;
+  const noLeft = !footerLeftButtons || footerLeftButtons.length === 0
+  const noRight = !footerRightButtons || footerRightButtons.length === 0
+  const useDefaultClose = showFooter && noLeft && noRight
 
   const bodyHeight = showFooter
     ? `calc(100vh - ${HEADER_BASE + BODY_EXTRA * 2}px)`
-    : `calc(100vh - ${HEADER_BASE}px)`;
+    : `calc(100vh - ${HEADER_BASE}px)`
 
   return (
     <>
@@ -114,10 +117,7 @@ export default function ModuleContainer({
         }
       `}</style>
 
-      <div
-        data-panel-sticky
-        className={"w-full h-full overflow-hidden " + (className ?? "")}
-      >
+      <div data-panel-sticky className={'w-full h-full overflow-hidden ' + (className ?? '')}>
         {/* Header */}
         <div className="w-full bg-white border-b border-gray-200 rounded-[2px]">
           <div className="flex items-center justify-between px-5 py-3">
@@ -157,12 +157,14 @@ export default function ModuleContainer({
             height: FOOTER_HEIGHT,
             zIndex: 40,
             borderTopLeftRadius: '2px',
-            borderTopRightRadius: '2px',
+            borderTopRightRadius: '2px'
           }}
         >
           <div className="h-full flex items-center justify-between px-4">
             <div className="flex items-center gap-2">
-              {footerLeftButtons?.map((btn, idx) => <Button key={idx} {...btn} />)}
+              {footerLeftButtons?.map((btn, idx) => (
+                <Button key={idx} {...btn} />
+              ))}
             </div>
             <div className="flex items-center gap-2">
               {useDefaultClose ? (
@@ -177,5 +179,5 @@ export default function ModuleContainer({
         </div>
       )}
     </>
-  );
+  )
 }

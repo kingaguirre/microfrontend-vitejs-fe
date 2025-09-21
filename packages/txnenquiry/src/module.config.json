@@ -1,0 +1,10 @@
+{
+  "moduleName": "txnenquiry",
+  "pageTitle": "Transaction Enquiry",
+  "apiBaseUrl": "http://localhost:4000",
+  "config": {
+    "menuIcon": "auto_awesome_mosaic",
+    "navigateKey": "e",
+    "navigateKeyName": "Transaction Enquiry"
+  }
+}

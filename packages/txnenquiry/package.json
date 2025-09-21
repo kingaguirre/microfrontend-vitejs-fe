@@ -1,0 +1,42 @@
+{
+  "name": "txnenquiry",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@app/common": "1.0.0",
+    "axios": "^1.9.0",
+    "graphql": "^16.11.0",
+    "graphql-request": "^7.2.0",
+    "react": "^19.0.0",
+    "react-components-lib.eaa": "^1.0.3",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.6.2"
+  },
+  "devDependencies": {
+    "@originjs/vite-plugin-federation": "^1.4.1",
+    "@tanstack/react-query": "^5.80.10",
+    "@types/jest": "^30.0.0",
+    "@types/react": "^19.1.7",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4",
+    "@vitest/coverage-v8": "^3.2.4",
+    "autoprefixer": "^10",
+    "i": "^0.3.7",
+    "jsdom": "^26.1.0",
+    "path": "^0.12.7",
+    "postcss": "^8",
+    "tailwindcss": "^3",
+    "typescript": "^5",
+    "vite": "^6.3.5",
+    "vite-plugin-pages": "0.33.0"
+  },
+  "scripts": {
+    "start": "vite --port 3008 --strictPort",
+    "build": "vite build",
+    "serve": "vite preview",
+    "serve:local": "vite build && vite preview --port 4008 --strictPort",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage"
+  }
+}

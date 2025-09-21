@@ -1,0 +1,10 @@
+{
+  "moduleName": "statement-browser",
+  "pageTitle": "Statement Browser",
+  "apiBaseUrl": "http://localhost:4000",
+  "config": {
+    "menuIcon": "open_in_browser",
+    "navigateKey": "b",
+    "navigateKeyName": "Statement browser"
+  }
+}

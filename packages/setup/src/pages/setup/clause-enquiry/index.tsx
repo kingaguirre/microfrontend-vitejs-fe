@@ -1,45 +1,38 @@
-import React, { useState } from "react";
-import ModuleContainer from "../../../components/ModuleContainer";
-import {
-  Panel,
-  Grid,
-  GridItem,
-  FormControl,
-  Button,
-  Icon,
-} from "react-components-lib.eaa";
+import React, { useState } from 'react'
+import ModuleContainer from '../../../components/ModuleContainer'
+import { Panel, Grid, GridItem, FormControl, Button, Icon } from 'react-components-lib.eaa'
 
 export default function ClauseEnquiry() {
   // Top search input
-  const [searchShortName, setSearchShortName] = useState("");
+  const [searchShortName, setSearchShortName] = useState('')
 
   // Details (mocked; wire to API after)
-  const [clauseId, setClauseId] = useState("");
-  const [detailShortName, setDetailShortName] = useState("");
-  const [islamic, setIslamic] = useState(false);
-  const [applicableTemplate, setApplicableTemplate] = useState("");
-  const [active, setActive] = useState(false);
-  const [longName, setLongName] = useState("");
+  const [clauseId, setClauseId] = useState('')
+  const [detailShortName, setDetailShortName] = useState('')
+  const [islamic, setIslamic] = useState(false)
+  const [applicableTemplate, setApplicableTemplate] = useState('')
+  const [active, setActive] = useState(false)
+  const [longName, setLongName] = useState('')
 
   const onSearch = () => {
     // demo: populate some locked details to mirror the screenshot
-    setClauseId("CL-0001");
-    setDetailShortName(searchShortName || "Sample Clause");
-    setIslamic(false);
-    setApplicableTemplate("Facility");
-    setActive(false);
-    setLongName("Sample Clause Long Name");
-  };
+    setClauseId('CL-0001')
+    setDetailShortName(searchShortName || 'Sample Clause')
+    setIslamic(false)
+    setApplicableTemplate('Facility')
+    setActive(false)
+    setLongName('Sample Clause Long Name')
+  }
 
   const onClear = () => {
-    setSearchShortName("");
-    setClauseId("");
-    setDetailShortName("");
-    setIslamic(false);
-    setApplicableTemplate("");
-    setActive(false);
-    setLongName("");
-  };
+    setSearchShortName('')
+    setClauseId('')
+    setDetailShortName('')
+    setIslamic(false)
+    setApplicableTemplate('')
+    setActive(false)
+    setLongName('')
+  }
 
   return (
     <ModuleContainer title="Clause Enquiry" onBack={() => history.back()} showFooter>
@@ -53,7 +46,7 @@ export default function ClauseEnquiry() {
                 placeholder="Enter Clause Name.."
                 type="text"
                 value={searchShortName}
-                onChange={(e: any) => setSearchShortName(e?.target?.value ?? "")}
+                onChange={(e: any) => setSearchShortName(e?.target?.value ?? '')}
               />
             </GridItem>
             <GridItem xs={12} md={3}>
@@ -79,7 +72,7 @@ export default function ClauseEnquiry() {
               placeholder="Placeholder text here.."
               type="text"
               value={clauseId}
-              onChange={() => { }}
+              onChange={() => {}}
               disabled
             />
           </GridItem>
@@ -89,7 +82,7 @@ export default function ClauseEnquiry() {
               placeholder="Enter Clause Name.."
               type="text"
               value={detailShortName}
-              onChange={() => { }}
+              onChange={() => {}}
               disabled
             />
           </GridItem>
@@ -98,7 +91,7 @@ export default function ClauseEnquiry() {
               label="Islamic Indicator"
               type="checkbox"
               checked={islamic}
-              onChange={() => { }}
+              onChange={() => {}}
               disabled
             />
           </GridItem>
@@ -108,7 +101,7 @@ export default function ClauseEnquiry() {
               placeholder="Enter Template Type"
               type="text"
               value={applicableTemplate}
-              onChange={() => { }}
+              onChange={() => {}}
               disabled
             />
           </GridItem>
@@ -119,7 +112,7 @@ export default function ClauseEnquiry() {
               label="Active Status"
               type="checkbox"
               checked={active}
-              onChange={() => { }}
+              onChange={() => {}}
               disabled
             />
           </GridItem>
@@ -131,7 +124,7 @@ export default function ClauseEnquiry() {
               placeholder="Placeholder text here..."
               type="textarea"
               value={longName}
-              onChange={() => { }}
+              onChange={() => {}}
               disabled
               maxLength={5000}
             />
@@ -139,5 +132,5 @@ export default function ClauseEnquiry() {
         </Grid>
       </Panel>
     </ModuleContainer>
-  );
+  )
 }

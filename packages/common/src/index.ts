@@ -1,4 +1,5 @@
 // packages/common/src/index.ts
+export * from './components'
 export * from './createGraphQLClient'
 export * from './translationContext'
 export * from './useGlobalStore'

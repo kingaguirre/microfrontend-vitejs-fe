@@ -1,6 +1,6 @@
 // packages/setup/src/pages/setup/interest-base-rate-maintenance/index.tsx
-import React, { useCallback, useState } from "react";
-import ModuleContainer from "../../../components/ModuleContainer";
+import React, { useCallback, useState } from 'react'
+import ModuleContainer from '../../../components/ModuleContainer'
 import {
   Panel,
   Grid,
@@ -9,86 +9,84 @@ import {
   FormControl,
   Button,
   Icon,
-  DataTable,
-} from "react-components-lib.eaa";
-import type { ColumnSetting } from "react-components-lib.eaa";
+  DataTable
+} from 'react-components-lib.eaa'
+import type { ColumnSetting } from 'react-components-lib.eaa'
 
 type Row = {
-  __internalId: string;
-  bookingLocation: string;
-  valueDate: string;
-  activeStatus: string;
-};
+  __internalId: string
+  bookingLocation: string
+  valueDate: string
+  activeStatus: string
+}
 
 /* ---------- stable constants ---------- */
 const MODULES = [
-  "Product Pricing Standard Rate Sheet (PPS)",
-  "Interest Rate Sheet Maintenance",
-  "Country Specific Rate Maintenance",
-] as const;
+  'Product Pricing Standard Rate Sheet (PPS)',
+  'Interest Rate Sheet Maintenance',
+  'Country Specific Rate Maintenance'
+] as const
 
 const BOOKING_LOCATION_OPTIONS = [
-  { text: "HQ - Head Office", value: "HQ" },
-  { text: "BR001 - Branch 1", value: "BR001" },
-] as const;
+  { text: 'HQ - Head Office', value: 'HQ' },
+  { text: 'BR001 - Branch 1', value: 'BR001' }
+] as const
 
 const STATUS_OPTIONS = [
-  { text: "ACTV - Active", value: "ACTV" },
-  { text: "INACT - Inactive", value: "INACT" },
-] as const;
+  { text: 'ACTV - Active', value: 'ACTV' },
+  { text: 'INACT - Inactive', value: 'INACT' }
+] as const
 
 const COLUMNS: ColumnSetting[] = [
-  { column: "bookingLocation", title: "Booking Location" },
-  { column: "valueDate", title: "Value Date" },
-  { column: "activeStatus", title: "Active Status" },
-];
+  { column: 'bookingLocation', title: 'Booking Location' },
+  { column: 'valueDate', title: 'Value Date' },
+  { column: 'activeStatus', title: 'Active Status' }
+]
 
 export default function InterestBaseRateMaintenance() {
-  const [activeModule, setActiveModule] = useState(0);
+  const [activeModule, setActiveModule] = useState(0)
 
   // filters
-  const [bookingLocation, setBookingLocation] = useState<string>("");
-  const [valueDate, setValueDate] = useState<string>("");
-  const [activeStatus, setActiveStatus] = useState<string>("ACTV");
+  const [bookingLocation, setBookingLocation] = useState<string>('')
+  const [valueDate, setValueDate] = useState<string>('')
+  const [activeStatus, setActiveStatus] = useState<string>('ACTV')
 
   // table rows
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<Row[]>([])
 
   const onSearch = useCallback(() => {
     if (!bookingLocation || !valueDate) {
-      setRows([]);
-      return;
+      setRows([])
+      return
     }
 
     const locText =
-      BOOKING_LOCATION_OPTIONS.find((o) => o.value === bookingLocation)?.text ||
-      bookingLocation;
-    const statusText =
-      STATUS_OPTIONS.find((o) => o.value === activeStatus)?.text || activeStatus;
+      BOOKING_LOCATION_OPTIONS.find((o) => o.value === bookingLocation)?.text || bookingLocation
+    const statusText = STATUS_OPTIONS.find((o) => o.value === activeStatus)?.text || activeStatus
 
     // demo rows; replace with server data if needed
     setRows([
       {
-        __internalId: "r1",
+        __internalId: 'r1',
         bookingLocation: locText,
         valueDate,
-        activeStatus: statusText,
+        activeStatus: statusText
       },
       {
-        __internalId: "r2",
+        __internalId: 'r2',
         bookingLocation: locText,
         valueDate,
-        activeStatus: statusText,
-      },
-    ]);
-  }, [bookingLocation, valueDate, activeStatus]);
+        activeStatus: statusText
+      }
+    ])
+  }, [bookingLocation, valueDate, activeStatus])
 
   const onClear = useCallback(() => {
-    setBookingLocation("");
-    setValueDate("");
-    setActiveStatus("ACTV");
-    setRows([]);
-  }, []);
+    setBookingLocation('')
+    setValueDate('')
+    setActiveStatus('ACTV')
+    setRows([])
+  }, [])
 
   return (
     <ModuleContainer
@@ -105,7 +103,7 @@ export default function InterestBaseRateMaintenance() {
               <button
                 key={m}
                 className={`w-full text-left px-3 py-2 border-b last:border-b-0 transition-colors ${
-                  idx === activeModule ? "bg-blue-50 font-medium" : "hover:bg-gray-50"
+                  idx === activeModule ? 'bg-blue-50 font-medium' : 'hover:bg-gray-50'
                 }`}
                 onClick={() => setActiveModule(idx)}
               >
@@ -128,7 +126,7 @@ export default function InterestBaseRateMaintenance() {
                   options={BOOKING_LOCATION_OPTIONS as any}
                   value={bookingLocation}
                   onChange={(v: string | string[] | null) =>
-                    setBookingLocation(Array.isArray(v) ? (v[0] ?? "") : (v ?? ""))
+                    setBookingLocation(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
                   }
                   clearable
                 />
@@ -140,7 +138,7 @@ export default function InterestBaseRateMaintenance() {
                   label="Value Date"
                   type="date"
                   value={valueDate}
-                  onChange={(e: any) => setValueDate(e?.target?.value ?? "")}
+                  onChange={(e: any) => setValueDate(e?.target?.value ?? '')}
                   placeholder="YYYY-MM-DD"
                 />
               </GridItem>
@@ -153,7 +151,7 @@ export default function InterestBaseRateMaintenance() {
                   options={STATUS_OPTIONS as any}
                   value={activeStatus}
                   onChange={(v: string | string[] | null) =>
-                    setActiveStatus(Array.isArray(v) ? (v[0] ?? "") : (v ?? ""))
+                    setActiveStatus(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
                   }
                 />
               </GridItem>
@@ -175,13 +173,10 @@ export default function InterestBaseRateMaintenance() {
 
           {/* Results panel */}
           <Panel title="Enquirer Catalog" hasShadow={false}>
-            <DataTable
-              columnSettings={COLUMNS}
-              dataSource={rows}
-            />
+            <DataTable columnSettings={COLUMNS} dataSource={rows} />
           </Panel>
         </div>
       </div>
     </ModuleContainer>
-  );
+  )
 }

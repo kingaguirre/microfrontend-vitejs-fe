@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import AppShell from './AppShell'
 import Login from '../Login'
 import NotFound from '../NotFound'
+import Home from '../Home'
 import type { RouteObject } from 'react-router-dom'
 import { Loader } from 'react-components-lib.eaa'
 
@@ -58,37 +59,36 @@ export default function AppRouter({ moduleName, menuItems = [], routes }: AppRou
     { path: '*', element: <NotFound /> }
   ]
 
-  const defaultRoute = moduleName ?? menuItems[0]?.path ?? ''
+  const shellMenuItems =
+    menuItems.length > 0 ? menuItems : [{ title: moduleName ?? '', path: moduleName ?? '' }]
 
   // Define the full RouteObject tree
   const appRoutes: RouteObject[] = [
     // PUBLIC
     {
-      index: true,
+      // index: true,
+      path: '/',
       element: !token ? (
         <Login onLogin={handleLogin} />
       ) : (
-        <Navigate to={`/${defaultRoute}`} replace />
-      )
+        <AppShell menuItems={shellMenuItems} onLogout={handleLogout} />
+      ),
+      children: [
+        {
+          path: '/',
+          element: <Home />
+        }
+      ]
     },
     {
       path: 'login',
-      element: !token ? (
-        <Login onLogin={handleLogin} />
-      ) : (
-        <Navigate to={`/${defaultRoute}`} replace />
-      )
+      element: !token ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />
     },
     // PROTECTED + LAYOUT
     {
       path: moduleName ?? '',
       element: token ? (
-        <AppShell
-          menuItems={
-            menuItems.length > 0 ? menuItems : [{ title: moduleName ?? '', path: moduleName ?? '' }]
-          }
-          onLogout={handleLogout}
-        />
+        <AppShell menuItems={shellMenuItems} onLogout={handleLogout} />
       ) : (
         <Navigate to="/login" replace />
       ),
