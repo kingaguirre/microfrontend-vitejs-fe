@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from 'react-components-lib.eaa'
 import { useAllMergedConfigs } from '@app/common'
+import { createPortal } from 'react-dom'
 
 type RouteMap = Partial<Record<string, string>>
 type ChordOpener = { ctrl?: boolean; meta?: boolean; code: string }
@@ -247,14 +248,14 @@ export default function ChordHUD() {
     width: 'calc(100vw - 32px)'
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed bottom-4 right-4 pointer-events-none"
-      style={{ zIndex: 60 }}
+      style={{ zIndex: visible ? 99999 : -1 }}
       aria-hidden={!open}
     >
       <div
-        className="rounded-xl shadow-xl backdrop-blur px-4 py-3 text-white pointer-events-auto"
+        className="rounded-lg shadow-xl backdrop-blur px-4 py-3 text-white pointer-events-auto"
         style={{
           ...animStyle,
           background: 'linear-gradient(135deg, rgba(17,24,39,.92), rgba(31,41,55,.92))',
@@ -312,6 +313,6 @@ export default function ChordHUD() {
           </div>
         </div>
       </div>
-    </div>
+    </div>, document.body
   )
 }

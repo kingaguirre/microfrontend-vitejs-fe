@@ -1,6 +1,7 @@
 {
   "moduleName": "setup",
   "pageTitle": "Setup",
+  "apiBaseUrl": "https://workdesk-api.onrender.com",
   "config": {
     "menuIcon": "settings",
     "navigateKey": "s",
