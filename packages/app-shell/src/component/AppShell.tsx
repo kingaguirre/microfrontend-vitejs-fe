@@ -4,11 +4,21 @@ import { useNavigate, useLocation, useOutlet } from 'react-router-dom'
 import { AppShell, Loader } from 'react-components-lib.eaa'
 import { RIGHT_ICONS, NOTIFICATIONS, STATIC_SUB_MENUS } from './data'
 import { ErrorBoundary } from './ErrorBoundary'
-import { TranslationProvider, usePageStore, useSubMenuStore, useAlertStore, useAllMergedConfigs } from '@app/common'
+import {
+  TranslationProvider,
+  usePageStore,
+  useSubMenuStore,
+  useAlertStore,
+  useAllMergedConfigs,
+  registerCurrentModule
+} from '@app/common'
 import './shell.css'
 import { RouteLoader } from './RouteLoader'
 import Offline from '../Offline'
 import { AlertContainer } from './AlertContainer'
+import ChordHUD from './ChordHUD'
+
+const DEFAULT_APP_TITLE = 'TradeXpress'
 
 export default function Shell({
   menuItems,
@@ -21,7 +31,10 @@ export default function Shell({
   const { pathname, search } = useLocation()
 
   // All module configs (e.g., { setup: { config: { menuIcon: '...' } }, ... })
-  const allConfigs = useAllMergedConfigs() as Record<string, { config?: { menuIcon?: string } } | undefined>
+  const allConfigs = useAllMergedConfigs() as Record<
+    string,
+    { config?: { menuIcon?: string } } | undefined
+  >
 
   // ✅ get all page titles from store (reactive)
   const pageTitlesMap: any = usePageStore((s: any) => s.pageTitles)
@@ -38,10 +51,10 @@ export default function Shell({
     const goOffline = () => setIsOnline(false)
     const goOnline = () => {
       setIsOnline(true)
-      // if we started in offline mode, flip back to “online”‑render and re‑mount AppShell
+      // if we started in offline mode, flip back to “online”-render and re-mount AppShell
       if (!initialOnline) {
         setInitialOnline(true)
-        // re‐navigate to the current URL to re‑instantiate the shell
+        // re‐navigate to the current URL to re-instantiate the shell
         navigate(window.location.pathname + window.location.search, { replace: true })
       }
     }
@@ -91,7 +104,7 @@ export default function Shell({
   const segments = pathname.replace(/^\/|\/$/g, '').split('/')
   const modulePath = segments[0]
   const currentMenuItem = menuItems?.find((m) => m.path === modulePath)
-  const urlTitle = currentMenuItem?.title ?? menuItems?.[0]?.title ?? 'Microfrontend'
+  const urlTitle = currentMenuItem?.title ?? DEFAULT_APP_TITLE
   const urlName = ''
 
   // read pageTitle / pageName for this modulePath (falls back to URL values)
@@ -106,6 +119,12 @@ export default function Shell({
     setPageName(modulePath, pageName)
     setPageTitle(modulePath, pageTitle)
   }, [modulePath, pageName, pageTitle, setPageName, setPageTitle])
+
+  // 🟢 Make current module available to MFEs BEFORE children mount/fetch
+  useLayoutEffect(() => {
+    if (!modulePath) return
+    registerCurrentModule(modulePath)
+  }, [modulePath])
 
   useEffect(() => {
     document.title = `${pageTitle}${pageName ? ` - ${pageName}` : ''}`
@@ -236,13 +255,9 @@ export default function Shell({
   }
 
   // Main menu icon mapping
-  // This is a simple mapping based on the path, you can customize it further
   const getIcon = (path: string) => {
-    // 1) Prefer per-module override from configs: <module>.config.menuIcon
     const cfgIcon = allConfigs?.[path]?.config?.menuIcon
     if (cfgIcon && typeof cfgIcon === 'string' && cfgIcon.trim()) return cfgIcon
-
-    // 2) Fallbacks by known paths
     switch (path) {
       case 'query':
         return 'cloud_queue'
@@ -304,13 +319,9 @@ export default function Shell({
         pageTitle={pageTitle as any}
         pageName={pageName as any}
         showFooter={false}
-        onClickLogo={() => {
-          // Navigate to the first menu item or a default route
-          const firstItem = menuItems?.[0]?.path || '/'
-          navigate(`/${firstItem}`, { replace: true })
-        }}
+        onClickLogo={() => navigate('/', { replace: true })}
         rightIcons={[
-          ...RIGHT_ICONS as any,
+          ...(RIGHT_ICONS as any),
           {
             icon: 'logout',
             onClick: handleLogout,
@@ -340,6 +351,8 @@ export default function Shell({
       >
         {/* mount the central AlertContainer */}
         <AlertContainer />
+
+        <ChordHUD />
 
         {initialOnline ? (
           <>

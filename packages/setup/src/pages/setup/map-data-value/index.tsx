@@ -1,6 +1,6 @@
 // packages/setup/src/pages/setup/map-data-value/index.tsx
-import React, { useCallback, useState } from "react";
-import ModuleContainer from "../../../components/ModuleContainer";
+import React, { useCallback, useState } from 'react'
+import ModuleContainer from '../../../components/ModuleContainer'
 import {
   Panel,
   Grid,
@@ -9,64 +9,64 @@ import {
   Dropdown,
   Button,
   Icon,
-  DataTable,
-} from "react-components-lib.eaa";
-import type { ColumnSetting } from "react-components-lib.eaa";
+  DataTable
+} from 'react-components-lib.eaa'
+import type { ColumnSetting } from 'react-components-lib.eaa'
 
 type Row = {
-  __internalId: string;
-  sourceValue: string;
-  destinationValue: string;
-  active: string;
-};
+  __internalId: string
+  sourceValue: string
+  destinationValue: string
+  active: string
+}
 
 /* ---------- stable constants ---------- */
 const BOOKING_LOCATION_OPTIONS = [
-  { text: "HQ - Head Office", value: "HQ" },
-  { text: "BR001 - Branch 1", value: "BR001" },
-] as const;
+  { text: 'HQ - Head Office', value: 'HQ' },
+  { text: 'BR001 - Branch 1', value: 'BR001' }
+] as const
 
 const COLUMNS: ColumnSetting[] = [
-  { column: "sourceValue", title: "Source Value" },
-  { column: "destinationValue", title: "Destination Value" },
-  { column: "active", title: "Active" },
-];
+  { column: 'sourceValue', title: 'Source Value' },
+  { column: 'destinationValue', title: 'Destination Value' },
+  { column: 'active', title: 'Active' }
+]
 
 export default function MapDataValue() {
-  const [mapId, setMapId] = useState<string>("");
-  const [bookingLocation, setBookingLocation] = useState<string>("");
-  const [active, setActive] = useState<boolean>(false);
+  const [mapId, setMapId] = useState<string>('')
+  const [bookingLocation, setBookingLocation] = useState<string>('')
+  const [active, setActive] = useState<boolean>(false)
 
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<Row[]>([])
 
   const onSearch = useCallback(() => {
     // In real use, fetch from server with { mapId, bookingLocation, active }
     if (!mapId) {
-      setRows([]);
-      return;
+      setRows([])
+      return
     }
     setRows([
       {
-        __internalId: "r1",
-        sourceValue: "SRC-01",
-        destinationValue: "DST-99",
-        active: active ? "Yes" : "No",
+        __internalId: 'r1',
+        sourceValue: 'SRC-01',
+        destinationValue: 'DST-99',
+        active: active ? 'Yes' : 'No'
       },
       {
-        __internalId: "r2",
-        sourceValue: "SRC-02",
-        destinationValue: "DST-88",
-        active: active ? "Yes" : "No",
-      },
-    ]);
-  }, [mapId, active]);
+        __internalId: 'r2',
+        sourceValue: 'SRC-02',
+        destinationValue: 'DST-88',
+        active: active ? 'Yes' : 'No'
+      }
+    ])
+  }, [mapId, active])
 
   const onClear = useCallback(() => {
-    setMapId("");
-    setBookingLocation("");
-    setActive(false);
-    setRows([]);
-  }, []);
+    setMapId('')
+    setBookingLocation('')
+    setActive(false)
+    setRows([])
+  }, [])
 
   return (
     <ModuleContainer title="Map Data Value" onBack={() => history.back()} showFooter>
@@ -80,8 +80,8 @@ export default function MapDataValue() {
               placeholder="Search Map ID"
               type="text"
               value={mapId}
-              onChange={(e: any) => setMapId(e?.target?.value ?? "")}
-              iconRight={[{ icon: "search" }]}
+              onChange={(e: any) => setMapId(e?.target?.value ?? '')}
+              iconRight={[{ icon: 'search' }]}
             />
           </GridItem>
 
@@ -92,7 +92,7 @@ export default function MapDataValue() {
               options={BOOKING_LOCATION_OPTIONS as any}
               value={bookingLocation}
               onChange={(v: string | string[] | null) =>
-                setBookingLocation(Array.isArray(v) ? (v[0] ?? "") : (v ?? ""))
+                setBookingLocation(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
               }
               clearable
             />
@@ -123,12 +123,9 @@ export default function MapDataValue() {
 
         <div className="mt-4">
           {/* Results */}
-          <DataTable
-            columnSettings={COLUMNS}
-            dataSource={rows}
-          />
+          <DataTable columnSettings={COLUMNS} dataSource={rows} />
         </div>
       </Panel>
     </ModuleContainer>
-  );
+  )
 }

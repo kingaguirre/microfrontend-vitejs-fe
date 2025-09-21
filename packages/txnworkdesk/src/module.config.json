@@ -1,4 +1,10 @@
 {
   "moduleName": "txnworkdesk",
-  "pageTitle": "Transaction Workderk"
+  "pageTitle": "Transaction Workdesk",
+  "apiBaseUrl": "http://localhost:4000",
+  "config": {
+    "menuIcon": "repeat",
+    "navigateKey": "w",
+    "navigateKeyName": "Transaction Workdesk"
+  }
 }

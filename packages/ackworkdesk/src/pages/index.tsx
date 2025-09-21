@@ -1,330 +1,207 @@
-// packages/setup/src/pages/acknowledgment-work-desk/index.tsx
-import { useMemo, useState } from "react";
-import axios from "axios";
-import {
-  DataTable,
-  Icon,
-  theme,
-} from "react-components-lib.eaa";
-import type { ColumnSetting, HeaderRightElement } from "react-components-lib.eaa";
+// packages/ackworkdesk/src/pages/index.tsx
+import { useMemo, useState } from 'react'
+import { DataTable } from 'react-components-lib.eaa'
+import type { ColumnSetting, HeaderRightElement } from 'react-components-lib.eaa'
+import moduleConfig from '../module.config.json'
+import { apiGet, MainPageContainer, MAIN_PAGE_TABLE_HEIGHT } from '@app/common'
 
-// utils/exportTable.ts
-/**
- * Minimal column shape this function needs.
- * If you already have a ColumnSetting type, you can import & use that instead.
- */
-export type ExportColumn = { column: string; title: string };
+/* ---------------------- export util (CSV/XLSX) ---------------------- */
+export type ExportColumn = { column: string; title: string }
+type ExportOpts = { fileName?: string; format?: 'xlsx' | 'csv'; sheetName?: string }
 
-type ExportOpts = {
-  fileName?: string;                 // default: "export"
-  format?: "xlsx" | "csv";           // default: "xlsx"
-  sheetName?: string;                // default: "Data" (xlsx only)
-};
-
-/**
- * One-call export for server/client tables.
- * - Builds AOA from rows+columns
- * - Generates CSV or XLSX
- * - Triggers browser download
- */
 export async function exportRows(
   rows: any[],
   columns: ExportColumn[],
   opts: ExportOpts = {}
 ): Promise<void> {
-  const fileName = (opts.fileName || "export").trim() || "export";
-  const format = opts.format || "xlsx";
-  const sheetName = opts.sheetName || "Data";
+  const fileName = (opts.fileName || 'export').trim() || 'export'
+  const format = opts.format || 'xlsx'
+  const sheetName = opts.sheetName || 'Data'
 
-  // 1) Build AOA (header + body)
-  const header = columns.map((c) => c.title);
+  const header = columns.map((c) => c.title)
   const body = (Array.isArray(rows) ? rows : []).map((r) =>
     columns.map((c) => {
-      const v = (r as any)?.[c.column];
-      if (Array.isArray(v)) return v.map((x) => (x == null ? "" : String(x))).join(",");
-      if (v == null) return "";
-      return v instanceof Date ? v.toISOString() : v;
+      const v = (r as any)?.[c.column]
+      if (Array.isArray(v)) return v.map((x) => (x == null ? '' : String(x))).join(',')
+      if (v == null) return ''
+      return v instanceof Date ? v.toISOString() : v
     })
-  );
-  const aoa: any[][] = [header, ...body];
+  )
+  const aoa: any[][] = [header, ...body]
 
-  // 2) Download helpers
-  const safeBase = fileName.replace(/\.(xlsx|csv)$/i, "");
-  const triggerBlobDownload = (blob: Blob, ext: "xlsx" | "csv") => {
-    const a = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    a.href = url;
-    a.download = `${safeBase}.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // 3) CSV quick path (no ExcelJS needed)
-  if (format === "csv") {
-    const escapeCSV = (val: any) => {
-      const s = val == null ? "" : String(val);
-      // wrap if contains comma, quote, or newline
-      if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-      return s;
-    };
-    const csv = aoa.map((row) => row.map(escapeCSV).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    triggerBlobDownload(blob, "csv");
-    return;
+  const safeBase = fileName.replace(/\.(xlsx|csv)$/i, '')
+  const dl = (blob: Blob, ext: 'xlsx' | 'csv') => {
+    const a = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    a.href = url
+    a.download = `${safeBase}.${ext}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
-  // 4) XLSX (lazy-load ExcelJS or use global if available)
-  const getExcelJS = async () => {
-    // Prefer ESM import; fall back to global
-    try {
-      const mod = await import(/* @vite-ignore */ "exceljs");
-      return (mod as any).default ?? (mod as any);
-    } catch {
-      const g = (window as any)?.ExcelJS;
-      if (g) return g;
-      throw new Error(
-        "ExcelJS not found. Install 'exceljs' or expose window.ExcelJS before calling exportRows."
-      );
+  if (format === 'csv') {
+    const esc = (val: any) => {
+      const s = val == null ? '' : String(val)
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
     }
-  };
+    const csv = aoa.map((row) => row.map(esc).join(',')).join('\n')
+    dl(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'csv')
+    return
+  }
 
-  const ExcelJS = await getExcelJS();
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet(sheetName);
-  ws.addRows(aoa);
-
-  const buf: ArrayBuffer = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buf], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
-  triggerBlobDownload(blob, "xlsx");
+  const getExcelJS = async () => {
+    try {
+      const mod = await import(/* @vite-ignore */ 'exceljs')
+      return (mod as any).default ?? (mod as any)
+    } catch {
+      const g = (window as any)?.ExcelJS
+      if (g) return g
+      throw new Error('ExcelJS not found.')
+    }
+  }
+  const ExcelJS = await getExcelJS()
+  const wb = new ExcelJS.Workbook()
+  const ws = wb.addWorksheet(sheetName)
+  ws.addRows(aoa)
+  const buf: ArrayBuffer = await wb.xlsx.writeBuffer()
+  dl(
+    new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+    'xlsx'
+  )
 }
+/* -------------------------------------------------------------------- */
 
 type Row = {
-  arn: string;
-  bookingLocation: string;
-  workflowStage: string;
-  submissionMode: string;
-  receivedAt: string;   // display
-  generatedBy: string;
-  __receivedAtMs: number; // stable sort key
-};
-
-const TOTAL = 12325;
-const TABLE_HEIGHT = "calc(100vh - 212px)";
+  id: number
+  arn: string
+  bookingLocation: string
+  workflowStage: string
+  submissionMode: string
+  receivedAt: string
+  generatedBy: string
+  __receivedAtMs: number
+}
 
 export default function AcknowledgmentWorkDesk() {
-  const [status, setStatus] = useState<"PENDING" | "REGISTERED" | "ALL">("PENDING");
+  const [status, setStatus] = useState<'PENDING' | 'REGISTERED' | 'ALL'>('PENDING')
 
   const statusOptions = [
-    { text: "Pending Registration", value: "PENDING" },
-    { text: "Registered", value: "REGISTERED" },
-    { text: "All", value: "ALL" },
-  ];
+    { text: 'Pending Registration', value: 'PENDING' },
+    { text: 'Registered', value: 'REGISTERED' },
+    { text: 'All', value: 'ALL' }
+  ]
 
   const columns: ColumnSetting[] = useMemo(
     () => [
-      { column: "arn", title: "ARN #", filter: { type: "text" } },
-      { column: "bookingLocation", title: "BOOKING LOCATION" },
-      { column: "workflowStage", title: "WORKFLOW STAGE" },
-      { column: "submissionMode", title: "SUBMISSION MODE" },
-      { column: "receivedAt", title: "RECEIVED DATE AND TIME" },
-      { column: "generatedBy", title: "GENERATED BY" },
+      { column: 'arn', title: 'ARN #', filter: { type: 'text' } },
+      { column: 'bookingLocation', title: 'BOOKING LOCATION' },
+      { column: 'workflowStage', title: 'WORKFLOW STAGE' },
+      { column: 'submissionMode', title: 'SUBMISSION MODE' },
+      { column: 'receivedAt', title: 'RECEIVED DATE AND TIME' },
+      { column: 'generatedBy', title: 'GENERATED BY' }
     ],
     []
-  );
+  )
 
-  // deterministic row factory
-  const makeRow = (i: number): Row => {
-    const banks = [
-      "Standard Chartered Bank (Singapore) Ltd",
-      "SCB Malaysia Berhad",
-      "SCB Hong Kong Ltd",
-    ];
-    const stages = ["SPLCP - Split Completed", "SPLIN - Split Initiated", "APRV - Approved"];
-    const modes = ["EML - Received via Email", "TNG - Trade Nextgen", "OTC - Over the Counter"];
-
-    const base = Date.parse("2025-09-16T07:36:53Z");
-    const ms = base - i * 3600_000;
-    const ts = new Date(ms)
-      .toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-        timeZone: "UTC",
-      })
-      .replace(",", "");
-
-    return {
-      arn: String(2_500_000 + i),
-      bookingLocation: banks[i % banks.length],
-      workflowStage: stages[i % stages.length],
-      submissionMode: modes[i % modes.length],
-      receivedAt: ts,
-      generatedBy: "System",
-      __receivedAtMs: ms,
-    };
-  };
-
-  // Build an in-memory dataset once (so the page works even before you wire a real API)
-  const DB = useMemo<Row[]>(
-    () => Array.from({ length: TOTAL }, (_, i) => makeRow(i)),
-    []
-  );
-
-  const deriveStatus = (r: Row): "PENDING" | "REGISTERED" =>
-    /Initiated/i.test(r.workflowStage) ? "PENDING" : "REGISTERED";
-
-  // ---- serverMode fetcher honoring sorting/filters ----
   const server = useMemo(
     () => ({
       debounceMs: 250,
-      fetcher: async ({
-        pageIndex,
-        pageSize,
-        sorting,
-        columnFilters,
-        globalFilter,
-      }: {
-        pageIndex: number;
-        pageSize: number;
-        sorting: { id: string; desc: boolean }[];
-        columnFilters: { id: string; value: unknown }[];
-        globalFilter: string;
-      }) => {
-        let rows = DB;
+      fetcher: async ({ pageIndex, pageSize, sorting, columnFilters, globalFilter }: any) => {
+        const sortBy = sorting?.[0]?.id ?? ''
+        const order = sorting?.[0]?.desc ? 'desc' : 'asc'
 
-        // external status filter
-        if (status !== "ALL") rows = rows.filter((r) => deriveStatus(r) === status);
-
-        // column filters
-        for (const f of columnFilters || []) {
-          const id = String(f.id);
-          const val = String((f as any).value ?? "").toLowerCase().trim();
-          if (!val) continue;
-          rows = rows.filter((r) => String((r as any)[id] ?? "").toLowerCase().includes(val));
+        const params: any = {
+          limit: pageSize,
+          skip: pageIndex * pageSize,
+          q: globalFilter ?? '',
+          sortBy,
+          order,
+          filters: JSON.stringify(columnFilters ?? []),
+          status
         }
 
-        // global filter
-        if (globalFilter?.trim()) {
-          const q = globalFilter.toLowerCase();
-          rows = rows.filter((r) => Object.values(r).some((v) => String(v).toLowerCase().includes(q)));
-        }
+        // Hierarchical key for easy invalidation: ['workdesk', <module>, 'ack', <params>]
+        const key = [
+          'workdesk',
+          moduleConfig.moduleName,
+          'ack',
+          { pageIndex, pageSize, sortBy, order, columnFilters, q: globalFilter ?? '', status }
+        ] as const
 
-        // sorting (first sort key only)
-        if (sorting?.length) {
-          const { id, desc } = sorting[0];
-          rows = [...rows].sort((a, b) => {
-            if (id === "receivedAt") {
-              const x = (a.__receivedAtMs ?? 0) - (b.__receivedAtMs ?? 0);
-              return x < 0 ? -1 : x > 0 ? 1 : 0;
-            }
-            const av = (a as any)[id];
-            const bv = (b as any)[id];
-            const an = Number(av);
-            const bn = Number(bv);
-            if (!Number.isNaN(an) && !Number.isNaN(bn)) return an - bn;
-            return String(av).localeCompare(String(bv));
-          });
-          if (desc) rows.reverse();
-        }
+        const data = await apiGet<{ rows: Row[]; total: number }>({
+          endpoint: '/workdesk/search',
+          params,
+          queryKey: key // ✅ enables caching via ensureQueryData
+        })
 
-        const total = rows.length;
-        const start = pageIndex * pageSize;
-        const page = rows.slice(start, Math.min(total, start + pageSize));
-        return { rows: page, total };
-      },
+        return data
+      }
     }),
-    [DB, status]
-  );
+    [status]
+  )
 
-  // ---- server-side download controls (custom) ----
   const downloadControls = useMemo(
     () => ({
-      fileName: "ack_work_desk",
-      format: "xlsx" as const,
+      fileName: 'ack_work_desk',
+      format: 'xlsx' as const,
       showConfigSection: true,
       showBuiltinAll: false,
       showBuiltinSelected: false,
       extraMenuItems: [
         {
-          key: "server-all",
-          icon: "cloud_download",
-          label: "Download ALL from server",
-          onClick: async ({
-            fileName,
-            format,
-          }: {
-            fileName: string;
-            format: "xlsx" | "csv";
-          }) => {
-            // ── Replace this with YOUR real API ─────────────────────────────
-            // Example pattern (send current UI filters to server):
-            // const { data } = await axios.get('/api/ack-work-desk/export', {
-            //   params: { status }
-            // });
-            // const rows: Row[] = data?.rows ?? [];
-
-            // Temporary local fallback to keep this working now:
-            const rows: Row[] = (status === "ALL" ? DB : DB.filter((r) => deriveStatus(r) === status));
-
-            await exportRows(rows, columns, { fileName, format });
-          },
-        },
-      ],
+          key: 'server-all',
+          icon: 'cloud_download',
+          label: 'Download ALL from server',
+          onClick: async ({ fileName, format }: { fileName: string; format: 'xlsx' | 'csv' }) => {
+            const params: any = { limit: 0, skip: 0, status }
+            // Non-cached one-off GET (omit queryKey)
+            const data = await apiGet<{ rows: Row[]; total: number }>({
+              endpoint: '/workdesk/search',
+              params
+            })
+            await exportRows(data.rows, columns as unknown as ExportColumn[], { fileName, format })
+          }
+        }
+      ]
     }),
-    [columns, DB, status]
-  );
+    [status, columns]
+  )
 
   const headerRightElements: HeaderRightElement[] = [
     {
-      type: "dropdown",
+      type: 'dropdown',
       width: 220,
-      placeholder: "Pending Registration",
+      placeholder: 'Pending Registration',
       options: statusOptions,
       value: status,
       clearable: false,
       onChange: (v: string | string[] | null) =>
-        setStatus((Array.isArray(v) ? (v[0] ?? "") : (v ?? "")) as any),
+        setStatus((Array.isArray(v) ? (v[0] ?? '') : (v ?? '')) as any)
     },
     {
-      type: "button",
-      text: "Registration",
-      color: "success",
-      leftIcon: <Icon icon="plus-circle" size={14} />,
-      onClick: () => console.log("Registration"),
-    },
-  ];
+      type: 'button',
+      text: 'Registration',
+      color: 'success',
+      icon: 'plus-circle',
+      onClick: () => console.log('Registration')
+    }
+  ]
 
   return (
-    <div className="w-full h-full bg-gray-100 rounded-[2px]">
-      {/* Header: previous style, title only */}
-      <div className="bg-white border border-gray-200 px-4 py-2">
-        <div className="text-md font-semibold" style={{ color: theme.colors.primary.darker }}>
-          Acknowledgment Work Desk
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="p-3">
-        <DataTable
-          enableGlobalFiltering
-          columnSettings={columns}
-          enableDownload
-          downloadControls={downloadControls}
-          serverMode
-          server={server as any}
-          pageSize={20}
-          height={TABLE_HEIGHT}
-          headerRightElements={headerRightElements}
-        />
-      </div>
-    </div>
-  );
+    <MainPageContainer title="Acknowledgment Work Desk">
+      <DataTable
+        enableGlobalFiltering
+        columnSettings={columns}
+        enableDownload
+        downloadControls={downloadControls}
+        serverMode
+        server={server as any}
+        pageSize={20}
+        height={MAIN_PAGE_TABLE_HEIGHT}
+        headerRightElements={headerRightElements}
+      />
+    </MainPageContainer>
+  )
 }

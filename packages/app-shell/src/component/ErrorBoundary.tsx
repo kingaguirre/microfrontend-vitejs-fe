@@ -1,9 +1,11 @@
 // src/components/ErrorBoundary.tsx
-import React, { Component, ReactNode } from 'react'
+import React, { Component, ReactNode, createRef } from 'react'
 import { Button, Icon } from 'react-components-lib.eaa'
 import { Link } from 'react-router-dom'
 
-interface Props { children: ReactNode }
+interface Props {
+  children: ReactNode
+}
 interface State {
   hasError: boolean
   error: Error | null
@@ -36,6 +38,8 @@ const TAKEAWAYS = [
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false, error: null, componentStack: '' }
 
+  private messageRef = createRef<HTMLPreElement>()
+
   static getDerivedStateFromError(error: Error) {
     return { hasError: true, error }
   }
@@ -50,15 +54,27 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   handleCopy = () => {
-    const e = this.state.error
-    const details = [
-      e?.name ? `Name: ${e.name}` : '',
-      e?.message ? `Message: ${e.message}` : '',
-      e?.stack ? `Stack:\n${e.stack}` : '',
-      this.state.componentStack ? `Component stack:\n${this.state.componentStack}` : ''
-    ].filter(Boolean).join('\n\n')
+    // Copy exactly what's visible in the message area
+    const text =
+      this.messageRef.current?.innerText ||
+      this.state.error?.message ||
+      'An unexpected error occurred.'
 
-    navigator?.clipboard?.writeText?.(details).catch(() => {})
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {})
+    } else {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      try {
+        document.execCommand('copy')
+      } catch {}
+      document.body.removeChild(ta)
+    }
   }
 
   render() {
@@ -127,9 +143,7 @@ export class ErrorBoundary extends Component<Props, State> {
         </div>
 
         {/* Footer text only */}
-        <p className="text-center text-xs italic text-gray-700">
-          {randomTakeaway}
-        </p>
+        <p className="text-center text-xs italic text-gray-700">{randomTakeaway}</p>
       </div>
     )
   }

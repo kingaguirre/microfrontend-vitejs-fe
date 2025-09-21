@@ -1,76 +1,70 @@
-import React, { useCallback, useState } from "react";
-import ModuleContainer from "../../../components/ModuleContainer";
-import {
-  Panel,
-  Grid,
-  GridItem,
-  Dropdown,
-  Button,
-  Icon,
-  DataTable,
-} from "react-components-lib.eaa";
-import type { ColumnSetting } from "react-components-lib.eaa";
+import React, { useCallback, useState } from 'react'
+import ModuleContainer from '../../../components/ModuleContainer'
+import { Panel, Grid, GridItem, Dropdown, Button, Icon, DataTable } from 'react-components-lib.eaa'
+import type { ColumnSetting } from 'react-components-lib.eaa'
 
 type Row = {
-  __internalId: string;
-  bookingLocation: string;
-  activeStatus: string;
-};
+  __internalId: string
+  bookingLocation: string
+  activeStatus: string
+}
 
 /* ---------- STABLE CONSTANTS (prevents re-create loops) ---------- */
 const BOOKING_LOCATION_OPTIONS = [
-  { text: "HQ - Head Office", value: "HQ" },
-  { text: "BR001 - Branch 1", value: "BR001" },
-  { text: "BR002 - Branch 2", value: "BR002" },
-] as const;
+  { text: 'HQ - Head Office', value: 'HQ' },
+  { text: 'BR001 - Branch 1', value: 'BR001' },
+  { text: 'BR002 - Branch 2', value: 'BR002' }
+] as const
 
 const STATUS_OPTIONS = [
-  { text: "ACTV - Active", value: "ACTV" },
-  { text: "INACT - Inactive", value: "INACT" },
-] as const;
+  { text: 'ACTV - Active', value: 'ACTV' },
+  { text: 'INACT - Inactive', value: 'INACT' }
+] as const
 
 const COLUMNS: ColumnSetting[] = [
-  { column: "bookingLocation", title: "Booking Location" },
-  { column: "activeStatus", title: "Active Status" },
-];
+  { column: 'bookingLocation', title: 'Booking Location' },
+  { column: 'activeStatus', title: 'Active Status' }
+]
 
 /* small helper to avoid unnecessary state churn */
 const sameRows = (a: Row[], b: Row[]) =>
-  a.length === b.length && a.every((r, i) => r.bookingLocation === b[i].bookingLocation && r.activeStatus === b[i].activeStatus);
+  a.length === b.length &&
+  a.every(
+    (r, i) => r.bookingLocation === b[i].bookingLocation && r.activeStatus === b[i].activeStatus
+  )
 
 export default function FxRateMaintenance() {
   // filters
-  const [bookingLocation, setBookingLocation] = useState<string>("");
-  const [activeStatus, setActiveStatus] = useState<string>("ACTV");
+  const [bookingLocation, setBookingLocation] = useState<string>('')
+  const [activeStatus, setActiveStatus] = useState<string>('ACTV')
 
   // table rows
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<Row[]>([])
 
   const onSearch = useCallback(() => {
     // If you fetch from server, do it here and setRows(response.rows)
     const locText =
       BOOKING_LOCATION_OPTIONS.find((o) => o.value === bookingLocation)?.text ||
-      (bookingLocation ? bookingLocation : "—");
-    const statusText =
-      STATUS_OPTIONS.find((o) => o.value === activeStatus)?.text || activeStatus;
+      (bookingLocation ? bookingLocation : '—')
+    const statusText = STATUS_OPTIONS.find((o) => o.value === activeStatus)?.text || activeStatus
 
     const next: Row[] = bookingLocation
       ? [
-          { __internalId: "r1", bookingLocation: locText, activeStatus: statusText },
-          { __internalId: "r2", bookingLocation: locText, activeStatus: statusText },
-          { __internalId: "r3", bookingLocation: locText, activeStatus: statusText },
+          { __internalId: 'r1', bookingLocation: locText, activeStatus: statusText },
+          { __internalId: 'r2', bookingLocation: locText, activeStatus: statusText },
+          { __internalId: 'r3', bookingLocation: locText, activeStatus: statusText }
         ]
-      : [];
+      : []
 
     // only update if changed (prevents noisy renders in some table libs)
-    setRows((prev) => (sameRows(prev, next) ? prev : next));
-  }, [bookingLocation, activeStatus]);
+    setRows((prev) => (sameRows(prev, next) ? prev : next))
+  }, [bookingLocation, activeStatus])
 
   const onClear = useCallback(() => {
-    setBookingLocation("");
-    setActiveStatus("ACTV");
-    setRows([]);
-  }, []);
+    setBookingLocation('')
+    setActiveStatus('ACTV')
+    setRows([])
+  }, [])
 
   return (
     <ModuleContainer title="FX Rate Maintenance" onBack={() => history.back()} showFooter>
@@ -83,9 +77,9 @@ export default function FxRateMaintenance() {
               label="Booking Location"
               placeholder="Select Booking Location"
               options={BOOKING_LOCATION_OPTIONS as any}
-              value={bookingLocation ?? ""}
+              value={bookingLocation ?? ''}
               onChange={(v: string | string[] | null) =>
-                setBookingLocation(Array.isArray(v) ? (v[0] ?? "") : (v ?? ""))
+                setBookingLocation(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
               }
               clearable
             />
@@ -97,9 +91,9 @@ export default function FxRateMaintenance() {
               label="Active Status"
               placeholder="Select Status"
               options={STATUS_OPTIONS as any}
-              value={activeStatus ?? "ACTV"}
+              value={activeStatus ?? 'ACTV'}
               onChange={(v: string | string[] | null) =>
-                setActiveStatus(Array.isArray(v) ? (v[0] ?? "") : (v ?? ""))
+                setActiveStatus(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
               }
             />
           </GridItem>
@@ -126,8 +120,7 @@ export default function FxRateMaintenance() {
             height="calc(100vh - 444px)"
           />
         </div>
-        
       </Panel>
     </ModuleContainer>
-  );
+  )
 }

@@ -3,6 +3,8 @@
   "pageTitle": "Setup",
   "config": {
     "menuIcon": "settings",
+    "navigateKey": "s",
+    "navigateKeyName": "Setup",
     "setupMenu": [
       {
         "id": "setup",
@@ -14,10 +16,7 @@
             "id": "booking-location-maintenance",
             "title": "booking location maintenance",
             "icon": "location_pin",
-            "keywords": [
-              "location",
-              "booking"
-            ],
+            "keywords": ["location", "booking"],
             "path": "/setup/booking-location-maintenance"
           },
           {

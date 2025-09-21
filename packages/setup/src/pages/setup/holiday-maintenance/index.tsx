@@ -1,79 +1,68 @@
 // packages/setup/src/pages/setup/holiday-maintenance/index.tsx
-import React, { useCallback, useState } from "react";
-import ModuleContainer from "../../../components/ModuleContainer";
-import {
-  Panel,
-  Grid,
-  GridItem,
-  Dropdown,
-  Button,
-  Icon,
-  DataTable,
-} from "react-components-lib.eaa";
-import type { ColumnSetting } from "react-components-lib.eaa";
+import React, { useCallback, useState } from 'react'
+import ModuleContainer from '../../../components/ModuleContainer'
+import { Panel, Grid, GridItem, Dropdown, Button, Icon, DataTable } from 'react-components-lib.eaa'
+import type { ColumnSetting } from 'react-components-lib.eaa'
 
 type Row = {
-  __internalId: string;
-  bookingLocation: string;
-  financeCentre: string;
-  year: string;
-};
+  __internalId: string
+  bookingLocation: string
+  financeCentre: string
+  year: string
+}
 
 /* ---------- Stable constants ---------- */
 const BOOKING_LOCATION_OPTIONS = [
-  { text: "HQ - Head Office", value: "HQ" },
-  { text: "BR001 - Branch 1", value: "BR001" },
-] as const;
+  { text: 'HQ - Head Office', value: 'HQ' },
+  { text: 'BR001 - Branch 1', value: 'BR001' }
+] as const
 
 const FINANCE_OPTIONS = [
-  { text: "Kuala Lumpur", value: "KL" },
-  { text: "Singapore", value: "SG" },
-] as const;
+  { text: 'Kuala Lumpur', value: 'KL' },
+  { text: 'Singapore', value: 'SG' }
+] as const
 
 const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => {
-  const y = String(2023 + i);
-  return { text: y, value: y };
-}) as const;
+  const y = String(2023 + i)
+  return { text: y, value: y }
+}) as const
 
 const COLUMNS: ColumnSetting[] = [
-  { column: "bookingLocation", title: "Booking Location" },
-  { column: "financeCentre", title: "Finance Centre" },
-  { column: "year", title: "Year" },
-];
+  { column: 'bookingLocation', title: 'Booking Location' },
+  { column: 'financeCentre', title: 'Finance Centre' },
+  { column: 'year', title: 'Year' }
+]
 
 export default function HolidayMaintenance() {
-  const [bookingLocation, setBookingLocation] = useState<string>("");
-  const [financeCentre, setFinanceCentre] = useState<string>("");
-  const [year, setYear] = useState<string>("");
+  const [bookingLocation, setBookingLocation] = useState<string>('')
+  const [financeCentre, setFinanceCentre] = useState<string>('')
+  const [year, setYear] = useState<string>('')
 
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<Row[]>([])
 
   const onSearch = useCallback(() => {
     if (!bookingLocation || !financeCentre || !year) {
-      setRows([]);
-      return;
+      setRows([])
+      return
     }
 
     const locText =
-      BOOKING_LOCATION_OPTIONS.find((o) => o.value === bookingLocation)?.text ||
-      bookingLocation;
-    const finText =
-      FINANCE_OPTIONS.find((o) => o.value === financeCentre)?.text ||
-      financeCentre;
+      BOOKING_LOCATION_OPTIONS.find((o) => o.value === bookingLocation)?.text || bookingLocation
+    const finText = FINANCE_OPTIONS.find((o) => o.value === financeCentre)?.text || financeCentre
 
     // Demo data; replace with server results if needed
     setRows([
-      { __internalId: "r1", bookingLocation: locText, financeCentre: finText, year },
-      { __internalId: "r2", bookingLocation: locText, financeCentre: finText, year },
-    ]);
-  }, [bookingLocation, financeCentre, year]);
+      { __internalId: 'r1', bookingLocation: locText, financeCentre: finText, year },
+      { __internalId: 'r2', bookingLocation: locText, financeCentre: finText, year }
+    ])
+  }, [bookingLocation, financeCentre, year])
 
   const onClear = useCallback(() => {
-    setBookingLocation("");
-    setFinanceCentre("");
-    setYear("");
-    setRows([]);
-  }, []);
+    setBookingLocation('')
+    setFinanceCentre('')
+    setYear('')
+    setRows([])
+  }, [])
 
   return (
     <ModuleContainer title="Holiday Maintenance" onBack={() => history.back()} showFooter>
@@ -88,7 +77,7 @@ export default function HolidayMaintenance() {
               options={BOOKING_LOCATION_OPTIONS as any}
               value={bookingLocation}
               onChange={(v: string | string[] | null) =>
-                setBookingLocation(Array.isArray(v) ? (v[0] ?? "") : (v ?? ""))
+                setBookingLocation(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
               }
               clearable
             />
@@ -102,7 +91,7 @@ export default function HolidayMaintenance() {
               options={FINANCE_OPTIONS as any}
               value={financeCentre}
               onChange={(v: string | string[] | null) =>
-                setFinanceCentre(Array.isArray(v) ? (v[0] ?? "") : (v ?? ""))
+                setFinanceCentre(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
               }
               clearable
             />
@@ -116,7 +105,7 @@ export default function HolidayMaintenance() {
               options={YEAR_OPTIONS as any}
               value={year}
               onChange={(v: string | string[] | null) =>
-                setYear(Array.isArray(v) ? (v[0] ?? "") : (v ?? ""))
+                setYear(Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
               }
               clearable
             />
@@ -135,7 +124,7 @@ export default function HolidayMaintenance() {
             </div>
           </GridItem>
         </Grid>
-        
+
         <div className="mt-4">
           <DataTable
             title="Enquirer Catalog"
@@ -146,5 +135,5 @@ export default function HolidayMaintenance() {
         </div>
       </Panel>
     </ModuleContainer>
-  );
+  )
 }
