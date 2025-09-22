@@ -6,6 +6,7 @@ import moduleConfig from '../module.config.json'
 import { apiGet, apiPatch, MainPageContainer, MAIN_PAGE_TABLE_HEIGHT } from '@app/common'
 import { useQueryClient } from '@tanstack/react-query'
 import ModuleLink from '../components/ModuleLink'
+import { useGlobalStore } from '@app/common'
 
 type Row = {
   id: number
@@ -32,6 +33,9 @@ type Row = {
   subSegment: string
   splitId: string
 }
+
+// Use the module's name as the cross-module slice key (e.g. "txnworkdesk")
+const GLOBAL_SLICE_KEY: string = moduleConfig.moduleName
 
 // helper: N random digits as a string, zero-padded
 const randomDigits = (len: number = 6): string => {
@@ -252,6 +256,12 @@ export default function TxnWorkDesk() {
     []
   )
 
+  const commitTxnWorkdeskToGlobal = (patch: any) => {
+    const gs = useGlobalStore.getState()
+    const prev = (gs.store as any)?.[GLOBAL_SLICE_KEY] ?? {}
+    gs.setStateFor(GLOBAL_SLICE_KEY, { ...prev, ...patch })
+  }
+
   const server = useMemo(
     () => ({
       debounceMs: 300,
@@ -294,6 +304,24 @@ export default function TxnWorkDesk() {
           endpoint: '/workdesk/search',
           params,
           queryKey: key
+        })
+
+        commitTxnWorkdeskToGlobal({
+          rows: (data as any)?.rows ?? [],
+          total: (data as any)?.total ?? 0,
+          lastQuery: {
+            pageIndex,
+            pageSize,
+            sortBy,
+            order,
+            columnFilters,
+            q: globalFilter ?? '',
+            trnSearch,
+            hideAcr,
+            savedFilter,
+            status: 'ALL'
+          },
+          lastFetchedAt: new Date().toISOString()
         })
 
         return data
@@ -353,7 +381,7 @@ export default function TxnWorkDesk() {
     }
   }
 
-  const headerRightElements: HeaderRightElement[] = [
+  const headerLeftElements: HeaderRightElement[] = [
     {
       type: 'checkbox',
       text: 'Hide ACR Steps',
@@ -390,7 +418,7 @@ export default function TxnWorkDesk() {
       color: 'warning',
       disabled: isPatching,
       icon: 'edit',
-      onClick: patchArn2500001 // ← single local function
+      onClick: patchArn2500001
     }
   ]
 
@@ -404,7 +432,8 @@ export default function TxnWorkDesk() {
         enableGlobalFiltering
         enableDownload
         downloadControls={downloadControls}
-        headerRightElements={headerRightElements}
+        hideClearAllFiltersButton
+        headerLeftElements={headerLeftElements}
         pageSize={20}
       />
     </MainPageContainer>

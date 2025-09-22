@@ -1,7 +1,9 @@
+// packages/txnworkdesk/src/pages/panes/GeneralDetailsPane.tsx
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { FormRenderer } from 'react-components-lib.eaa'
-import { apiGet } from '@app/common'
+import { FormRenderer, Icon, theme } from 'react-components-lib.eaa'
+import { apiGet, useGlobalStore } from '@app/common'
+import { shallow } from 'zustand/shallow'
 import moduleConfig from '../../module.config.json'
 import type { PaneHandle } from '../../components/SplitPanelLazy'
 
@@ -32,6 +34,31 @@ const dashDate = (s: string | null | undefined): string => {
   return m ? `${m[1]}-${m[2]}-${m[3]}` : s
 }
 
+const normalizeGeneral = (g: any): GeneralDetails => ({
+  ackNumber: Number(g?.ackNumber ?? 0),
+  submissionMode: g?.submissionMode ?? '',
+  financeType: g?.financeType ?? '',
+  productGroup: g?.productGroup ?? '',
+  btcId: g?.btcId ?? '',
+  limitGroupId: g?.limitGroupId ?? '',
+  valueDateOption: g?.valueDateOption ?? '',
+  valueDate: dashDate(g?.valueDate ?? ''),
+  summaryListing: g?.summaryListing ?? '',
+  submissionBranch: g?.submissionBranch ?? '',
+  clientReference: g?.clientReference ?? '',
+  isIslamicTransaction: !!g?.isIslamicTransaction,
+  reviewFlag: !!g?.reviewFlag,
+  almApprovalReceived: !!g?.almApprovalReceived,
+  emailIndemnityHeld: g?.emailIndemnityHeld ?? '',
+  clientRemarks: g?.clientRemarks ?? '',
+  signatureVerified: !!g?.signatureVerified,
+  counterparty: g?.counterparty ?? ''
+})
+
+// stable empty slice to avoid re-renders
+const NULL_SLICE = Object.freeze({ rows: [] as any[], detailByTrn: {} as any, lastError: null as string | null })
+const SLICE_KEY = moduleConfig.moduleName
+
 export default function GeneralDetailsPane({
   onRegisterHandle,
   disabled
@@ -42,57 +69,121 @@ export default function GeneralDetailsPane({
   const { txnNumber = '' } = useParams<{ txnNumber: string }>()
   const formRef = useRef<any>(null)
 
-  const [values, setValues] = useState<GeneralDetails | null>(null)
-  const [loadingFetch, setLoadingFetch] = useState(true)
-  const [loadingSubmit, setLoadingSubmit] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Expose submit to SplitPanelLazy footer
+  // expose submit to SplitPanelLazy footer
   useEffect(() => {
     if (!onRegisterHandle) return
-    const handle: PaneHandle = {
-      submit: () => formRef.current?.submit?.()
-    }
+    const handle: PaneHandle = { submit: () => formRef.current?.submit?.() }
     onRegisterHandle(handle)
     return () => onRegisterHandle(null)
   }, [onRegisterHandle])
 
-  // Fetch (cached)
+  // ===== GLOBAL STATE LOOKUP =====
+  const slice = useGlobalStore((s: any) => (s?.store?.[SLICE_KEY] ?? NULL_SLICE))
+  const rowsGlobal: any[] = slice?.rows ?? []
+  const detailByTrn: any = slice?.detailByTrn ?? {}
+  const lastErrorGlobal: string | null = slice?.lastError ?? null
+  const isNumeric = /^\d+$/.test(txnNumber)
+
+  // prefer cached detailed general if present (we store it under detailByTrn[trn].general)
+  const cachedGeneral = useMemo(() => {
+    if (!txnNumber) return null
+    const bucket = detailByTrn?.[txnNumber]
+    const payload = bucket?.general ?? bucket // tolerate direct storage
+    return payload ? normalizeGeneral(payload) : null
+  }, [detailByTrn, txnNumber])
+
+  // seed from rows if we have a matching row (lightweight optimistic fill)
+  const seedFromRow = useMemo<Partial<GeneralDetails> | null>(() => {
+    if (!txnNumber || rowsGlobal.length === 0) return null
+    const n = Number(txnNumber)
+    const match =
+      rowsGlobal.find((r: any) =>
+        isNumeric
+          ? String(r?.id ?? '') === String(n) || String(r?.arn ?? '') === String(n)
+          : String(r?.trn ?? '') === txnNumber
+      ) ?? null
+    if (!match) return null
+    return {
+      submissionMode: match?.submissionMode ?? '',
+      clientReference: match?.customerRef ?? '',
+      counterparty: match?.counterparty ?? ''
+    }
+  }, [rowsGlobal, txnNumber, isNumeric])
+
+  // ===== LOCAL STATE (only for this pane) =====
+  const [values, setValues] = useState<GeneralDetails | null>(cachedGeneral ?? (seedFromRow ? normalizeGeneral(seedFromRow) : null))
+  const [loadingFetch, setLoadingFetch] = useState<boolean>(false)
+  const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+  const fetchedFor = useRef<string | null>(null)
+
+  // keep values in sync when cachedGeneral arrives later
+  useEffect(() => {
+    if (cachedGeneral) setValues(cachedGeneral)
+  }, [cachedGeneral])
+
+  // fetch if we have no cached state yet
   useEffect(() => {
     let cancelled = false
-    const load = async () => {
-      setLoadingFetch(true)
+
+    if (!txnNumber) {
+      setError('Invalid transaction number')
+      setValues(null)
+      setLoadingFetch(false)
+      fetchedFor.current = null
+      return
+    }
+
+    if (cachedGeneral) {
       setError(null)
+      setLoadingFetch(false)
+      return
+    }
+
+    // avoid refetching same txnNumber
+    if (fetchedFor.current === txnNumber) return
+    fetchedFor.current = txnNumber
+
+    ;(async () => {
       try {
-        const isNumeric = /^\d+$/.test(txnNumber)
+        setLoadingFetch(true)
+        setError(null)
+
         const endpoint = isNumeric
           ? `/txn/id/${Number(txnNumber)}/general`
           : `/txn/${encodeURIComponent(txnNumber)}/general`
 
         const key = [
           'txnworkdesk',
-          moduleConfig.moduleName,
+          SLICE_KEY,
           'txn',
           'general',
           { txnNumber, kind: isNumeric ? 'id' : 'trn' }
         ] as const
 
-        const raw = await apiGet<GeneralDetails>({ endpoint, queryKey: key })
+        const raw = await apiGet<any>({ endpoint, queryKey: key })
         if (cancelled) return
-        setValues({ ...raw, valueDate: dashDate(raw.valueDate) })
+        const normalized = normalizeGeneral(raw)
+        setValues(normalized)
+
+        // persist to global for cross-screen reuse
+        const gs = useGlobalStore.getState()
+        const prev: any = (gs.store as any)?.[SLICE_KEY] ?? {}
+        const nextDetail = { ...(prev.detailByTrn ?? {}), [txnNumber]: { ...(prev.detailByTrn?.[txnNumber] ?? {}), general: normalized } }
+        gs.setStateFor(SLICE_KEY, { ...prev, detailByTrn: nextDetail })
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load general details')
       } finally {
         if (!cancelled) setLoadingFetch(false)
       }
-    }
-    load()
+    })()
+
     return () => {
       cancelled = true
     }
-  }, [txnNumber])
+  }, [txnNumber, isNumeric, cachedGeneral])
 
-  // Zod validations + placeholders
+  // ===== FORM CONFIG =====
   const fieldSettings: any[] = useMemo(
     () => [
       {
@@ -119,7 +210,6 @@ export default function GeneralDetailsPane({
             placeholder: 'e.g., EIF - Export Invoice Financing',
             validation: (z: any) => z.string().required('Finance Type is mandatory')
           },
-
           {
             name: 'productGroup',
             label: 'Product Group',
@@ -135,7 +225,6 @@ export default function GeneralDetailsPane({
             placeholder: 'e.g., 1 - GTF-Default',
             validation: (z: any) => z.string().required('Limit Group ID is mandatory')
           },
-
           {
             name: 'valueDateOption',
             label: 'Value Date Option',
@@ -150,7 +239,6 @@ export default function GeneralDetailsPane({
             type: 'text',
             placeholder: 'e.g., SML01 - Allowed'
           },
-
           {
             name: 'submissionBranch',
             label: 'Submission Branch',
@@ -178,11 +266,9 @@ export default function GeneralDetailsPane({
             ],
             placeholder: 'Select Option'
           },
-
           { name: 'isIslamicTransaction', label: 'Islamic Transaction', type: 'checkbox' },
           { name: 'reviewFlag', label: 'Review Flag', type: 'checkbox' },
           { name: 'almApprovalReceived', label: 'ALM Approval Received', type: 'checkbox' },
-
           {
             name: 'clientRemarks',
             label: 'Client Remarks',
@@ -206,9 +292,9 @@ export default function GeneralDetailsPane({
   const handleChange = (v: any) => setValues(v)
 
   const handleSubmit = async (v: any) => {
-    // Hook up PATCH/POST as needed
     try {
       setLoadingSubmit(true)
+      // wire PATCH/POST here
       console.log('[GeneralDetailsPane] submitted:', v)
     } finally {
       setLoadingSubmit(false)
@@ -217,19 +303,36 @@ export default function GeneralDetailsPane({
 
   return (
     <>
-      {error ? (
-        <div className="text-sm text-red-600">{error}</div>
-      ) : (
-        <FormRenderer
-          ref={formRef}
-          disabled={disabled}
-          fieldSettings={fieldSettings}
-          dataSource={values ?? {}}
-          onChange={handleChange}
-          onSubmit={handleSubmit}
-          loading={loadingFetch || loadingSubmit}
-        />
-      )}
+      <FormRenderer
+        ref={formRef}
+        disabled={!!disabled}
+        fieldSettings={fieldSettings}
+        dataSource={values ?? {}}
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+        loading={loadingFetch || loadingSubmit}
+      />
+      {error && <DangerInfoBox message={error} />}
     </>
+  )
+}
+
+function DangerInfoBox({ message }: { message: string }) {
+  const bg = theme.colors.danger.pale
+  const fg = theme.colors.danger.darker
+  const border = theme.colors.danger.base
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-2 rounded m-3"
+      style={{ background: bg, color: fg, borderLeft: `4px solid ${border}` }}
+      role="alert"
+      aria-live="polite"
+    >
+      <Icon icon="error_outline" size={18} />
+      <div className="text-sm">
+        <strong className="mr-1">Network error:</strong>
+        <span>{message}</span>
+      </div>
+    </div>
   )
 }

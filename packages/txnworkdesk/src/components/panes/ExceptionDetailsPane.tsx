@@ -106,6 +106,7 @@ export default function ExceptionDetailsPane({ onRegisterHandle, disabled = fals
         enableGlobalFiltering
         enableDownload
         disabled={disabled}
+        maxHeight='250px'
       />
     </Panel>
   )

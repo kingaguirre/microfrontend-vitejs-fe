@@ -101,7 +101,7 @@ export default function AcknowledgmentWorkDesk() {
     [status, columns]
   )
 
-  const headerRightElements: HeaderRightElement[] = [
+  const headerLeftElements: HeaderRightElement[] = [
     {
       type: 'dropdown',
       width: 220,
@@ -132,7 +132,7 @@ export default function AcknowledgmentWorkDesk() {
         server={server as any}
         pageSize={20}
         height={MAIN_PAGE_TABLE_HEIGHT}
-        headerRightElements={headerRightElements}
+        headerLeftElements={headerLeftElements}
       />
     </MainPageContainer>
   )

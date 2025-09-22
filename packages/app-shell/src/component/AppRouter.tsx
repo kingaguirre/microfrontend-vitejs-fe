@@ -8,10 +8,6 @@ import Home from '../Home'
 import type { RouteObject } from 'react-router-dom'
 import { Loader } from 'react-components-lib.eaa'
 
-import { useLocation } from 'react-router-dom'
-import { useRef, useEffect } from 'react'
-import './appRouter.css'
-
 interface AppRouterProps {
   moduleName?: string
   menuItems?: {
@@ -106,49 +102,8 @@ export default function AppRouter({ moduleName, menuItems = [], routes }: AppRou
       <Suspense
         fallback={<Loader size="md" appendTo=".app-shell-main-content" label="Loading..." />}
       >
-        <FadeTransition>
-          {(loc) => <Routes location={loc}>{renderRoutes(appRoutes)}</Routes>}
-        </FadeTransition>
+        <Routes>{renderRoutes(appRoutes)}</Routes>
       </Suspense>
     </BrowserRouter>
   )
-}
-
-/**
- * Only when going from “/” or “/login” into any other path,
- * will this wrapper fade-out the old tree then fade-in the new one.
- */
-function FadeTransition({
-  children
-}: {
-  children: (loc: ReturnType<typeof useLocation>) => React.ReactNode
-}) {
-  const location = useLocation()
-  const prevPath = useRef(location.pathname)
-  const [phase, setPhase] = useState<'fade-in' | 'fade-out'>('fade-in')
-  const [displayLoc, setDisplayLoc] = useState(location)
-
-  useEffect(() => {
-    const fromLogin = prevPath.current === '/' || prevPath.current === '/login'
-    const toAppShell = location.pathname !== '/' && location.pathname !== '/login'
-
-    if (fromLogin && toAppShell) {
-      // start fade-out
-      setPhase('fade-out')
-      const t = window.setTimeout(() => {
-        // swap to the new location and fade-in
-        prevPath.current = location.pathname
-        setDisplayLoc(location)
-        setPhase('fade-in')
-      }, 100) // match CSS transition-duration
-      return () => clearTimeout(t)
-    } else {
-      // any other navigation: no fade; just update
-      prevPath.current = location.pathname
-      setDisplayLoc(location)
-      setPhase('fade-in')
-    }
-  }, [location])
-
-  return <div className={`fade-transition ${phase}`}>{children(displayLoc)}</div>
 }

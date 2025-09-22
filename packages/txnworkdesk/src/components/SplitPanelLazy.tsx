@@ -95,7 +95,6 @@ export function SplitPanelLazy({
   onMenuChange,
   leftWidth = 240,
   header,
-  height = 'calc(100vh - 228px)',
   activationHotkey = { key: '/', ctrl: true, label: 'Ctrl+/' },
   footerActions,
   renderFooter,
@@ -329,7 +328,7 @@ export function SplitPanelLazy({
       {/* Optional external header slot */}
       {header ?? null}
 
-      <div className="grid" style={{ gridTemplateColumns: `${leftWidth}px 1fr`, gap: 12 }}>
+      <div className="grid" style={{ gridTemplateColumns: `${leftWidth}px calc(100% - 252px)`, gap: 12 }}>
         {/* Left rail */}
         <div>
           <Panel hideShadow title="SECTIONS">
@@ -341,7 +340,7 @@ export function SplitPanelLazy({
               aria-orientation="vertical"
               tabIndex={0}
               className="overflow-auto focus:outline-none no-scrollbar"
-              style={{ maxHeight: height }}
+              style={{ maxHeight: 'calc(100vh - 228px)' }}
             >
               {items.map((it, i) => {
                 const selected = it.id === selectedId
@@ -407,8 +406,8 @@ export function SplitPanelLazy({
         </div>
 
         {/* Right content */}
-        <Panel hideShadow noPadding>
-          <div className="overflow-auto no-scrollbar relative" style={{ height: height }}>
+        {/* <Panel hideShadow noPadding> */}
+          <div className="overflow-auto no-scrollbar relative bg-white rounded-[2px]" style={{ height: 'calc(100vh - 174px)' }}>
             <Suspense
               fallback={
                 <div className="absolute inset-0 grid place-content-center">
@@ -419,7 +418,7 @@ export function SplitPanelLazy({
               {rightContent}
             </Suspense>
           </div>
-        </Panel>
+        {/* </Panel> */}
       </div>
 
       {/* Footer (always visible) */}

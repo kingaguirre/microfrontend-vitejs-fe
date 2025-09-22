@@ -19,18 +19,17 @@ export default function TxnDetails() {
         id: 'general',
         title: 'General Details',
         icon: 'info',
-        // lazy pane; it may call /txn/:trn/general or /txn/id/:id/general internally
         loader: () => import('../../components/panes/GeneralDetailsPane')
       },
       {
         id: 'sustainable',
         title: 'Sustainable Finance',
-        loader: () => import('../../components/panes/EmptyPane')
+        loader: () => import('../../components/panes/SustainableFinancePane')
       },
       {
         id: 'documents',
         title: 'Documents',
-        loader: () => import('../../components/panes/EmptyPane')
+        loader: () => import('../../components/panes/DocumentsPane')
       },
       { id: 'parties', title: 'Parties', loader: () => import('../../components/panes/EmptyPane') },
       {

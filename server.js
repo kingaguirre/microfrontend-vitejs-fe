@@ -389,7 +389,10 @@ app.post("/workdesk", (req, res) => {
     subSegment: "03",
     splitId: String(251 + (id % 9)),
   };
+
   row.exceptions = buildExceptions(row);
+
+  row.documents = buildDocuments(row);
 
   ROWS.push(row);
   res.status(201).json(row);
@@ -460,6 +463,149 @@ app.get("/txn/id/:id/exceptions", (req, res) => {
   if (!row) return res.status(404).json({ error: "Not found" });
   return res.json(paginateAndFilter(row.exceptions ?? [], req.query));
 });
+
+// ---------- Sustainable Finance helpers ----------
+const SUSTAINABLE_CLASS = ["GREEN", "SL", "TRANSITION", "OTHERS"];
+
+function buildSustainable(row) {
+  const r = mulberry32(300000 + row.id * 17);
+  const flag = r() > 0.6 ? false : r() > 0.3 ? true : null; // null ~ not set
+  const cls = SUSTAINABLE_CLASS[Math.floor(r() * SUSTAINABLE_CLASS.length)];
+  const empowered = r() > 0.7 ? true : r() > 0.4 ? false : null;
+
+  // date as ISO yyyy-mm-dd (keep empty when not set)
+  const dateISO = new Date(row.__receivedAtMs).toISOString().slice(0, 10);
+
+  return {
+    sustainableFlag: flag,
+    classification: flag ? cls : "",
+    empoweredStatus: empowered,
+    empoweredDate: empowered ? dateISO : "",
+    remarks: "",
+    othersSpecify: "",
+  };
+}
+
+// attach to every row (single source of truth)
+for (const r of ROWS) {
+  r.sustainable = buildSustainable(r);
+}
+
+// ---------- Sustainable Finance endpoints ----------
+// GET by TRN
+app.get("/txn/:trn/sustainable", (req, res) => {
+  const row = findByTrn(req.params.trn);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(row.sustainable || buildSustainable(row));
+});
+
+// PATCH by TRN
+app.patch("/txn/:trn/sustainable", (req, res) => {
+  const row = findByTrn(req.params.trn);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  row.sustainable = { ...(row.sustainable || buildSustainable(row)), ...(req.body || {}) };
+  return res.json(row.sustainable);
+});
+
+// GET by ID
+app.get("/txn/id/:id/sustainable", (req, res) => {
+  const row = findById(req.params.id);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(row.sustainable || buildSustainable(row));
+});
+
+// PATCH by ID
+app.patch("/txn/id/:id/sustainable", (req, res) => {
+  const row = findById(req.params.id);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  row.sustainable = { ...(row.sustainable || buildSustainable(row)), ...(req.body || {}) };
+  return res.json(row.sustainable);
+});
+
+// ---------- NEW: Documents helpers ----------
+function buildDocuments(row) {
+  const cur = (row.bookingLocation.includes("Hong Kong") && "HKD")
+    || (row.bookingLocation.includes("Malaysia") && "MYR")
+    || "SGD";
+
+  const docNumber = `EIF_${row.id}_${String(row.customer).match(/\d+/)?.[0]?.slice(0,3) ?? "100" }xxxxxxxx`;
+  const issue = row.regDate;          // reuse demo dates
+  const due = row.relDate;
+  const maxMat = row.relDate;
+  const amt = 1978.05 + (row.id % 7); // deterministic(ish)
+  const elig = Math.round((amt * 0.9) * 100) / 100;
+
+  return {
+    // Batch details
+    batchType: "INV - INVOICE",
+    batchAmountCurrency: cur,
+    batchAmount: Number(amt.toFixed(2)),
+    batchCount: 1,
+    nonFactored: false,
+    maxEligibleCurrency: cur,
+    maxEligibleAmount: elig,
+    batchAdjustmentCurrency: cur,
+    batchAdjustmentAmount: 0,
+    originalInvoiceSubmissionDate: issue, // dd-MMM-yyyy format (same as other demo values)
+    statementDate: issue,
+    manualLLITrigger: false,
+
+    // Main
+    documentNumber: docNumber,
+    documentAmountCurrency: cur,
+    documentAmount: Number(amt.toFixed(2)),
+    adjustmentAmountCurrency: cur,
+    adjustmentAmount: 0,
+    counterpartyName: row.counterparty,
+    documentIssueDate: issue,
+    documentTenor: "30",
+    paymentTerms: "NET30",
+    documentDueDate: due,
+    incoterms: "FOB",
+    eligibleAmountCurrency: cur,
+    eligibleAmount: elig,
+    maxMaturityDate: maxMat,
+    documentApprovalStatus: "APPR",
+    overrideDocStatus: "",
+    overrideReason: "",
+
+    // Tables
+    docDetailRows: [
+      {
+        number: docNumber,
+        currency: cur,
+        amount: Number(amt.toFixed(2)),
+        issueDate: issue,
+        dueDate: due,
+        eligibleAmt: elig,
+        maxMaturityDate: maxMat,
+        status: "ELGB",
+      },
+    ],
+    goodsRows: [],
+    partyRows: [],
+    installmentRows: [],
+  };
+}
+
+// attach once so everything reads from ROWS (single table)
+for (const r of ROWS) {
+  r.documents = buildDocuments(r);
+}
+
+// ---------- NEW: Documents endpoints ----------
+app.get("/txn/:trn/documents", (req, res) => {
+  const row = findByTrn(req.params.trn);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(row.documents || buildDocuments(row));
+});
+
+app.get("/txn/id/:id/documents", (req, res) => {
+  const row = findById(req.params.id);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(row.documents || buildDocuments(row));
+});
+
 
 app.listen(PORT, () => {
   console.log(`Local API http://localhost:${PORT}  (delay ~${BASE_DELAY}ms ± ${JITTER}ms)`);
