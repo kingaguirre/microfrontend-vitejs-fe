@@ -185,7 +185,7 @@ export default function BookingLocationMaintenance() {
 
   return (
     <ModuleContainer title="Booking Location Maintenance" onBack={() => history.back()}>
-      <Panel title="Booking Location Maintenance" hasShadow={false}>
+      <Panel title="Booking Location Maintenance" hideShadow>
         <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
       </Panel>
     </ModuleContainer>

@@ -242,7 +242,7 @@ export default function TracerEnquiry() {
 
   return (
     <ModuleContainer title="Tracer Enquiry" onBack={() => history.back()}>
-      <Panel hasShadow={false}>
+      <Panel hideShadow>
         {/* Top filter row (no panel header) */}
         <Grid spacing={16}>
           <GridItem xs={12} md={3}>

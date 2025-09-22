@@ -163,7 +163,7 @@ export default function BranchMaintenance() {
 
   return (
     <ModuleContainer title="Branch Maintenance" onBack={() => history.back()} showFooter>
-      <Panel title="Branch" hasShadow={false}>
+      <Panel title="Branch" hideShadow>
         <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
       </Panel>
     </ModuleContainer>

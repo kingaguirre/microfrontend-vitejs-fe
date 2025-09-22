@@ -27,7 +27,7 @@ app.use(async (req, _res, next) => {
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// ---------- data generation (54,934 rows) ----------
+// ---------- data generation (4,934 rows) ----------
 function mulberry32(seed) {
   return function () {
     let t = (seed += 0x6d2b79f5);
@@ -44,11 +44,9 @@ const BANKS = [
   "SCB Hong Kong Ltd",
 ];
 const STAGES = [
-  // ack workflow stages (first 3)
   "SPLCP - Split Completed",
   "SPLIN - Split Initiated",
   "APRV - Approved",
-  // txn processing stages (next)
   "EXEMK - Exception Handling Maker",
   "PRINP - Processing In-Progress",
   "TXPMK - Transaction Pending Maker",
@@ -63,12 +61,11 @@ const CUSTOMERS = [
 ];
 const CNTP = ["PHARMA MED", "100502577 - TEST", "NG-Adaptor-IIF6"];
 
-// 4 tokens rotate colors in UI; "NULL" neutral for tdOpsApproval
 const TOKENS = ["ZEKE", "BOLT", "ECHO", "RISK"];
 const tokenForIndex = (i) => TOKENS[i % TOKENS.length];
 
 const ROWS = [];
-const N = 4934; // ⬅️ bump to ~55k
+const N = 4934;
 const base = Date.parse("2025-06-06T07:30:00Z");
 
 const fmt = (ms) =>
@@ -114,8 +111,8 @@ for (let i = 0; i < N; i++) {
     aml: tokenForIndex(i + 1),
     snc: tokenForIndex(i + 2),
     clbk: tokenForIndex(i + 3),
-    cocoa: tokenForIndex(i + 4), // with 4-token ring cocoa==lli; keep if you want more repeats
-    tdOpsApproval: "NULL", // neutral
+    cocoa: tokenForIndex(i + 4),
+    tdOpsApproval: "NULL",
     customerRef: i % 11 === 0 ? "NG-Adaptor-IIF6" : "NG-STPAdaptor-EIF",
     regDate: fmt(regMs),
     relDate: fmt(relMs),
@@ -171,6 +168,117 @@ function deriveStatus(row) {
   return /Initiated/i.test(row.workflowStage) ? "PENDING" : "REGISTERED";
 }
 
+// ---------- Txn helpers for Header & General ----------
+const BOOK_CODE_BY_NAME = {
+  "Standard Chartered Bank (Singapore) Ltd": "SG01",
+  "SCB Malaysia Berhad": "MY01",
+  "SCB Hong Kong Ltd": "HK01",
+};
+
+const PRODUCT_LONG_NAME = {
+  EIF: "Export Invoice Financing",
+  IIF: "Import Invoice Financing",
+  SUF: "Supply Chain / Shipping Under Finance",
+};
+
+const SUBMISSION_LABEL = {
+  TNG: "TNG - Trade Nextgen",
+  EML: "EML - Email",
+  OTC: "OTC - Over the Counter",
+};
+
+function findByTrn(trn) {
+  return ROWS.find((r) => String(r.trn) === String(trn));
+}
+function findById(id) {
+  const num = Number(id);
+  if (!Number.isFinite(num)) return undefined;
+  return ROWS.find((r) => r.id === num);
+}
+
+function digitsFromCustomer(customer) {
+  const m = String(customer).match(/\d+/);
+  return m ? m[0] : "000000000";
+}
+
+function buildHeader(row) {
+  return {
+    trn: row.trn,
+    product: row.product,
+    step: row.step,
+    subStep: row.subStep,
+    client: row.customer,
+    bookingLocation: BOOK_CODE_BY_NAME[row.bookingLocation] || "SG01", // compact code
+    bookingLocationName: row.bookingLocation, // full name if needed
+  };
+}
+
+function buildGeneral(row, indexSeed = 0) {
+  const custDigits = digitsFromCustomer(row.customer);
+  const btcId = `SG01${custDigits}${row.product}0101`;
+  const valueDate = row.relDate; // reuse release date for demo
+
+  return {
+    ackNumber: Number(row.arn),
+    submissionMode: SUBMISSION_LABEL[row.submissionMode] || row.submissionMode,
+    btcId,
+    limitGroupId: "1 - GTF-Default",
+    financeType: `${row.product} - ${PRODUCT_LONG_NAME[row.product] || "—"}`,
+    productGroup: "RF - Receivable finance",
+    valueDateOption: "PD - PROCESSING DATE",
+    valueDate,
+    summaryListing: "SML01 - Allowed",
+    submissionBranch: BOOK_CODE_BY_NAME[row.bookingLocation] || "SG01",
+    clientReference: row.customerRef,
+    isIslamicTransaction: row.product === "IIF" ? (indexSeed % 5 === 0) : false,
+    reviewFlag: indexSeed % 7 === 0,
+    almApprovalReceived: indexSeed % 9 === 0,
+    emailIndemnityHeld: indexSeed % 6 === 0 ? "Required" : "Not Required",
+    clientRemarks: "",
+    signatureVerified: indexSeed % 8 === 0,
+    counterparty: row.counterparty,
+  };
+}
+
+// ---------- Txn Exceptions helpers ----------
+const EXC_DEPTS = ["Operations", "Compliance", "Credit Control", "Trade Services", "Front Office"];
+const EXC_CODES = ["E001", "E014", "E027", "E042", "E055", "E063", "E078"];
+
+function buildExceptions(row) {
+  // deterministic 0–3 exceptions per txn
+  const r = mulberry32(100000 + row.id * 13);
+  const count = Math.floor(r() * 4);
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const code = EXC_CODES[Math.floor(r() * EXC_CODES.length)];
+    const dept = EXC_DEPTS[Math.floor(r() * EXC_DEPTS.length)];
+    out.push({
+      id: `${row.id}-${i + 1}`,
+      code,
+      description: `Auto-generated exception ${code} for TRN ${row.trn}`,
+      department: dept,
+    });
+  }
+  return out;
+}
+
+function paginateAndFilter(list, { q = "", limit = 20, skip = 0, sortBy, order = "asc", filters }) {
+  let rows = list.slice();
+  rows = rows.filter((r) => matchesGlobal(r, q));
+  rows = applyColumnFilters(rows, filters);
+  if (sortBy) rows = rows.slice().sort((a, b) => cmp(a[String(sortBy)], b[String(sortBy)], order));
+  const total = rows.length;
+  const off = Number(skip);
+  const lim = Number(limit);
+  const page = lim > 0 ? rows.slice(off, off + lim) : rows.slice();
+  return { rows: page, total };
+}
+
+// ---------- NEW: attach exceptions onto each ROW (single table) ----------
+for (const r of ROWS) {
+  r.exceptions = buildExceptions(r);
+}
+
 // ---------- routes ----------
 // GET /workdesk/search?q=&limit=&skip=&sortBy=&order=&filters=&status=&trnSearch=&hideAcr=&savedFilter=
 app.get("/workdesk/search", (req, res) => {
@@ -181,15 +289,14 @@ app.get("/workdesk/search", (req, res) => {
     sortBy,
     order = "asc",
     filters,
-    status,         // PENDING | REGISTERED | ALL
-    trnSearch = "", // txn header
-    hideAcr = "",   // "true"
-    savedFilter = "", // MKIP | LOCKED_ME
+    status,
+    trnSearch = "",
+    hideAcr = "",
+    savedFilter = "",
   } = req.query;
 
   let rows = ROWS.slice();
 
-  // header-style filters
   const statusStr = typeof status === "string" ? status.trim().toUpperCase() : "";
   if (statusStr && statusStr !== "ALL") {
     rows = rows.filter((r) => deriveStatus(r) === statusStr);
@@ -207,11 +314,9 @@ app.get("/workdesk/search", (req, res) => {
     rows = rows.filter((_, i) => i % 5 === 0);
   }
 
-  // DataTable global + column filters
   rows = rows.filter((r) => matchesGlobal(r, q));
   rows = applyColumnFilters(rows, filters);
 
-  // sorting
   if (sortBy) {
     const id = String(sortBy);
     rows = rows.slice().sort((a, b) => {
@@ -230,8 +335,7 @@ app.get("/workdesk/search", (req, res) => {
   res.json({ rows: page, total });
 });
 
-// CRUD (future demos)
-
+// CRUD (existing)
 // GET /workdesk/:id
 app.get("/workdesk/:id", (req, res) => {
   const id = Number(req.params.id);
@@ -285,6 +389,7 @@ app.post("/workdesk", (req, res) => {
     subSegment: "03",
     splitId: String(251 + (id % 9)),
   };
+  row.exceptions = buildExceptions(row);
 
   ROWS.push(row);
   res.status(201).json(row);
@@ -309,6 +414,51 @@ app.patch("/workdesk/ack/booking-location", (req, res) => {
 
   ROWS[idx] = { ...ROWS[idx], bookingLocation };
   return res.json({ ok: true, row: ROWS[idx] });
+});
+
+// ---------- NEW: Txn Details (Header & General) ----------
+// Get header by TRN
+// GET /txn/:trn/header
+app.get("/txn/:trn/header", (req, res) => {
+  const row = findByTrn(req.params.trn);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(buildHeader(row));
+});
+
+// Get general details by TRN
+// GET /txn/:trn/general
+app.get("/txn/:trn/general", (req, res) => {
+  const row = findByTrn(req.params.trn);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  // use id as seed to vary booleans deterministically
+  return res.json(buildGeneral(row, row.id));
+});
+
+// (Optional) id-based mirrors if you prefer /txn/id/*
+// GET /txn/id/:id/header
+app.get("/txn/id/:id/header", (req, res) => {
+  const row = findById(req.params.id);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(buildHeader(row));
+});
+// GET /txn/id/:id/general
+app.get("/txn/id/:id/general", (req, res) => {
+  const row = findById(req.params.id);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(buildGeneral(row, row.id));
+});
+
+// ---------- Exceptions endpoints (read from row.exceptions) ----------
+app.get("/txn/:trn/exceptions", (req, res) => {
+  const row = findByTrn(req.params.trn);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(paginateAndFilter(row.exceptions ?? [], req.query));
+});
+
+app.get("/txn/id/:id/exceptions", (req, res) => {
+  const row = findById(req.params.id);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(paginateAndFilter(row.exceptions ?? [], req.query));
 });
 
 app.listen(PORT, () => {

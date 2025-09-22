@@ -155,7 +155,7 @@ export default function BrdmEnquiry() {
 
   return (
     <ModuleContainer title="BRDM Enquiry" onBack={() => history.back()} showFooter>
-      <Panel title="BRDM" hasShadow={false}>
+      <Panel title="BRDM" hideShadow>
         {/* Filters row */}
         <Grid spacing={16}>
           <GridItem xs={12} md={3}>

@@ -1,7 +1,7 @@
 {
   "moduleName": "ackworkdesk",
   "pageTitle": "Acknowledgement Workdesk",
-  "apiBaseUrl": "https://workdesk-api.onrender.com",
+  "apiBaseUrl": "http://localhost:4000",
   "config": {
     "menuIcon": "desktop_mac",
     "navigateKey": "a",

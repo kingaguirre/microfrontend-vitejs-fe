@@ -71,7 +71,7 @@ export default function MapDataValue() {
   return (
     <ModuleContainer title="Map Data Value" onBack={() => history.back()} showFooter>
       {/* Filters */}
-      <Panel title="Map Value" hasShadow={false}>
+      <Panel title="Map Value" hideShadow>
         <Grid spacing={16}>
           <GridItem xs={12} md={3}>
             <FormControl

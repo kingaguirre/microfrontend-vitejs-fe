@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense, useRef, useLayoutEffect, useMemo } from 'react'
 import { useNavigate, useLocation, useOutlet } from 'react-router-dom'
 import { AppShell, Loader } from 'react-components-lib.eaa'
-import { RIGHT_ICONS, NOTIFICATIONS, STATIC_SUB_MENUS } from './data'
+import { NOTIFICATIONS, STATIC_SUB_MENUS } from './data'
 import { ErrorBoundary } from './ErrorBoundary'
 import {
   TranslationProvider,
@@ -321,7 +321,6 @@ export default function Shell({
         showFooter={false}
         onClickLogo={() => navigate('/', { replace: true })}
         rightIcons={[
-          ...(RIGHT_ICONS as any),
           {
             icon: 'logout',
             onClick: handleLogout,

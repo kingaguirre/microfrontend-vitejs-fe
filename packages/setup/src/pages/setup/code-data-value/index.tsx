@@ -144,7 +144,7 @@ export default function CodeDataValue() {
     <ModuleContainer title="Code Data Value" onBack={() => history.back()} showFooter>
       {/* --- Code Value panel --- */}
       <div className="mb-4">
-        <Panel title="Code Value" hasShadow={false}>
+        <Panel title="Code Value" hideShadow>
           <Grid spacing={16}>
             <GridItem xs={12} md={3}>
               <FormControl
@@ -199,7 +199,7 @@ export default function CodeDataValue() {
       </div>
 
       {/* --- Exclusion panel --- */}
-      <Panel title="Exclusion" hasShadow={false}>
+      <Panel title="Exclusion" hideShadow>
         <Grid spacing={16}>
           <GridItem xs={12} md={3}>
             <FormControl

@@ -67,7 +67,7 @@ export default function HolidayMaintenance() {
   return (
     <ModuleContainer title="Holiday Maintenance" onBack={() => history.back()} showFooter>
       {/* Filters */}
-      <Panel title="Holiday Maintenance" hasShadow={false}>
+      <Panel title="Holiday Maintenance" hideShadow>
         <Grid spacing={16}>
           <GridItem xs={12} md={3}>
             <Dropdown
