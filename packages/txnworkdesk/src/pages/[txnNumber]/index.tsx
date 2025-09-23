@@ -35,7 +35,7 @@ export default function TxnDetails() {
       {
         id: 'finances',
         title: 'Finances',
-        loader: () => import('../../components/panes/EmptyPane')
+        loader: () => import('../../components/panes/FinancesPane')
       },
       { id: 'charges', title: 'Charges', loader: () => import('../../components/panes/EmptyPane') },
       {
@@ -79,8 +79,8 @@ export default function TxnDetails() {
         footerActions={[
           {
             key: 'edit',
-            label: 'Edit',
-            onClick: () => setGloballyDisabled(false),
+            label: globallyDisabled ? 'Edit' : 'Cancel',
+            onClick: () => setGloballyDisabled(!globallyDisabled),
             variant: 'outlined',
             color: 'default'
           },
@@ -88,9 +88,10 @@ export default function TxnDetails() {
             key: 'save',
             label: 'Save',
             disabled: globallyDisabled,
-            onClick: ({ handle }) => {
-              const data = handle?.submit?.()
-              console.log(data)
+            onClick: async (val) => {
+              // const { handle } = val
+              // const data = await handle?.submit?.() // call submit
+              console.log(val)
             },
             color: 'success',
             width: 80
@@ -100,7 +101,10 @@ export default function TxnDetails() {
         // 2) pass props to panes (lazy panes only)
         paneProps={{
           // boolean OR a fn. Using a fn to show per-pane logic example:
-          disabled: globallyDisabled
+          disabled: globallyDisabled,
+          errorBoxConfig: {
+            bottomOffset: 48
+          }
         }}
       />
     </>

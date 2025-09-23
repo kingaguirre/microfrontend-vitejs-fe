@@ -1,10 +1,10 @@
 // packages/txnworkdesk/src/pages/panes/GeneralDetailsPane.tsx
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { FormRenderer, Icon, theme } from 'react-components-lib.eaa'
-import { apiGet, useGlobalStore } from '@app/common'
-import { shallow } from 'zustand/shallow'
+import { apiGet, apiPatch, useAlertStore, useGlobalStore } from '@app/common'
 import moduleConfig from '../../module.config.json'
+import { useQueryClient } from '@tanstack/react-query'
 import type { PaneHandle } from '../../components/SplitPanelLazy'
 
 type GeneralDetails = {
@@ -57,31 +57,31 @@ const normalizeGeneral = (g: any): GeneralDetails => ({
 
 // stable empty slice to avoid re-renders
 const NULL_SLICE = Object.freeze({ rows: [] as any[], detailByTrn: {} as any, lastError: null as string | null })
-const SLICE_KEY = moduleConfig.moduleName
+const MODULE_NAME = moduleConfig.moduleName
 
 export default function GeneralDetailsPane({
   onRegisterHandle,
-  disabled
+  ...rest
 }: {
-  onRegisterHandle?: (h: PaneHandle | null) => void
-  disabled?: boolean
+  onRegisterHandle?: (h: PaneHandle | null) => void,
 }) {
+  const qc = useQueryClient()
   const { txnNumber = '' } = useParams<{ txnNumber: string }>()
   const formRef = useRef<any>(null)
 
   // expose submit to SplitPanelLazy footer
   useEffect(() => {
     if (!onRegisterHandle) return
-    const handle: PaneHandle = { submit: () => formRef.current?.submit?.() }
+    const handle: PaneHandle = {
+      submit: () => formRef.current?.submit?.()}
     onRegisterHandle(handle)
     return () => onRegisterHandle(null)
   }, [onRegisterHandle])
 
   // ===== GLOBAL STATE LOOKUP =====
-  const slice = useGlobalStore((s: any) => (s?.store?.[SLICE_KEY] ?? NULL_SLICE))
+  const slice = useGlobalStore((s: any) => (s?.store?.[MODULE_NAME] ?? NULL_SLICE))
   const rowsGlobal: any[] = slice?.rows ?? []
   const detailByTrn: any = slice?.detailByTrn ?? {}
-  const lastErrorGlobal: string | null = slice?.lastError ?? null
   const isNumeric = /^\d+$/.test(txnNumber)
 
   // prefer cached detailed general if present (we store it under detailByTrn[trn].general)
@@ -155,7 +155,7 @@ export default function GeneralDetailsPane({
 
         const key = [
           'txnworkdesk',
-          SLICE_KEY,
+          MODULE_NAME,
           'txn',
           'general',
           { txnNumber, kind: isNumeric ? 'id' : 'trn' }
@@ -168,9 +168,9 @@ export default function GeneralDetailsPane({
 
         // persist to global for cross-screen reuse
         const gs = useGlobalStore.getState()
-        const prev: any = (gs.store as any)?.[SLICE_KEY] ?? {}
+        const prev: any = (gs.store as any)?.[MODULE_NAME] ?? {}
         const nextDetail = { ...(prev.detailByTrn ?? {}), [txnNumber]: { ...(prev.detailByTrn?.[txnNumber] ?? {}), general: normalized } }
-        gs.setStateFor(SLICE_KEY, { ...prev, detailByTrn: nextDetail })
+        gs.setStateFor(MODULE_NAME, { ...prev, detailByTrn: nextDetail })
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load general details')
       } finally {
@@ -291,33 +291,90 @@ export default function GeneralDetailsPane({
 
   const handleChange = (v: any) => setValues(v)
 
-  const handleSubmit = async (v: any) => {
-    try {
-      setLoadingSubmit(true)
-      // wire PATCH/POST here
-      console.log('[GeneralDetailsPane] submitted:', v)
-    } finally {
-      setLoadingSubmit(false)
+  const handleSubmit = async (res: any) => {
+    // FormRenderer may return either raw values or a { valid, values, invalidFields, updated } envelope
+    const result =
+      res && typeof res === 'object' && ('valid' in res || 'invalidFields' in res || 'updated' in res)
+        ? res
+        : { valid: true, values: res, invalidFields: [], updated: true };
+
+    if (!result.valid) {
+      return;
     }
-  }
+
+    // Only save when the form actually changed
+    const isUpdated = 'updated' in result ? !!result.updated : true;
+    if (!isUpdated) {
+      useAlertStore.setAlert({
+        title: 'No changes',
+        content: 'Nothing to save — the form has no changes.',
+        color: 'info',
+        icon: 'info',
+        placement: 'top-right',
+        closeDelay: 3500,
+      });
+      return;
+    }
+
+    const v = result.values;
+
+    try {
+      setLoadingSubmit(true);
+
+      const isNumeric = /^\d+$/.test(txnNumber);
+      const endpoint = isNumeric
+        ? `/txn/id/${Number(txnNumber)}/general`
+        : `/txn/${encodeURIComponent(txnNumber)}/general`;
+
+      const updated = await apiPatch<any>({ endpoint, data: v });
+
+      const normalized = normalizeGeneral(updated);
+      setValues(normalized);
+
+      // Update global cache so other panes reflect changes
+      const gs = useGlobalStore.getState();
+      const prev: any = (gs.store as any)?.[MODULE_NAME] ?? {};
+      const nextDetail = {
+        ...(prev.detailByTrn ?? {}),
+        [txnNumber]: { ...(prev.detailByTrn?.[txnNumber] ?? {}), general: normalized },
+      };
+      gs.setStateFor(MODULE_NAME, { ...prev, detailByTrn: nextDetail });
+
+      // Success toast (top-right)
+      useAlertStore.setAlert({
+        title: 'Saved',
+        content: 'General details updated successfully.',
+        color: 'success',
+        icon: 'check_circle',
+        placement: 'top-right',
+        closeDelay: 4000,
+      });
+
+      // invalidate cache
+      await qc.invalidateQueries({ queryKey: ['workdesk', MODULE_NAME, 'txn', 'catalog'] })
+    } finally {
+      setLoadingSubmit(false);
+    }
+  };
 
   return (
     <>
       <FormRenderer
+        {...rest}
+        disabled={loadingSubmit || (rest as any)?.disabled}
         ref={formRef}
-        disabled={!!disabled}
         fieldSettings={fieldSettings}
         dataSource={values ?? {}}
         onChange={handleChange}
         onSubmit={handleSubmit}
-        loading={loadingFetch || loadingSubmit}
+        loading={loadingFetch}
       />
       {error && <DangerInfoBox message={error} />}
     </>
   )
 }
 
-function DangerInfoBox({ message }: { message: string }) {
+export function DangerInfoBox({ message }: { message: string }) {
   const bg = theme.colors.danger.pale
   const fg = theme.colors.danger.darker
   const border = theme.colors.danger.base

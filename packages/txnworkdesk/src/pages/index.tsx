@@ -286,6 +286,7 @@ export default function TxnWorkDesk() {
           'workdesk',
           moduleConfig.moduleName,
           'txn',
+          'catalog',
           {
             pageIndex,
             pageSize,

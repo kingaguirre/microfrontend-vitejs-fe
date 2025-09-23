@@ -28,10 +28,10 @@ type Hotkey = {
   label?: string
 }
 
-export type PaneHandle = {
-  submit?: () => void | Promise<void>
+export type PaneHandle<TValues = unknown, TResult = unknown> = {
+  submit?: () => TResult | Promise<TResult>
   validate?: () => boolean | Promise<boolean>
-  getValues?: () => any
+  getValues?: () => TValues
   reset?: () => void
 }
 
@@ -40,9 +40,9 @@ export type FooterAction = {
   label: string
   onClick: (api: {
     activeId: string | null
-    handle: PaneHandle | null
-    submitActive: () => void
-  }) => void
+    handle: PaneHandle<any, any> | null
+    submitActive: () => unknown | Promise<unknown>
+  }) => void | Promise<void>
   icon?: string
   color?: string
   disabled?: boolean
@@ -330,7 +330,7 @@ export function SplitPanelLazy({
 
       <div className="grid" style={{ gridTemplateColumns: `${leftWidth}px calc(100% - 252px)`, gap: 12 }}>
         {/* Left rail */}
-        <div>
+        <div className='bg-white'>
           <Panel hideShadow title="SECTIONS">
             <div
               ref={listRef}
@@ -422,7 +422,7 @@ export function SplitPanelLazy({
       </div>
 
       {/* Footer (always visible) */}
-      <div className="border-t bg-white px-3 py-2 mt-3 fixed bottom-0 right-[16px] left-[16px]">
+      <div className="border-t bg-white px-3 py-2 mt-3 fixed bottom-0 right-[16px] left-[16px] rounded-[2px]">
         {typeof renderFooter === 'function' ? (
           renderFooter({
             submitActive,

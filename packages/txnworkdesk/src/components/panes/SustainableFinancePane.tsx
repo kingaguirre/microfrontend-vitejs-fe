@@ -25,11 +25,10 @@ const EMPTY: SustainableData = {
 
 export default function SustainableFinancePane({
   onRegisterHandle,
-  disabled
-}: {
-  onRegisterHandle?: (h: PaneHandle | null) => void
-  disabled?: boolean
-}) {
+    ...rest
+  }: {
+    onRegisterHandle?: (h: PaneHandle | null) => void
+  }) {
   const { txnNumber = '' } = useParams<{ txnNumber: string }>()
   const formRef = useRef<any>(null)
 
@@ -167,8 +166,8 @@ export default function SustainableFinancePane({
     <div className="text-sm text-red-600">{error}</div>
   ) : (
     <FormRenderer
+      {...rest}
       ref={formRef}
-      disabled={disabled}
       fieldSettings={fieldSettings}
       dataSource={values ?? {}}
       onChange={handleChange}

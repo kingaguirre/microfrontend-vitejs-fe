@@ -187,6 +187,16 @@ const SUBMISSION_LABEL = {
   OTC: "OTC - Over the Counter",
 };
 
+// put right below SUBMISSION_LABEL
+const SUBMISSION_CODE_BY_LABEL = Object.fromEntries(
+  Object.entries(SUBMISSION_LABEL).map(([code, label]) => [label, code])
+);
+
+// put right below BOOK_CODE_BY_NAME
+const BOOK_NAME_BY_CODE = Object.fromEntries(
+  Object.entries(BOOK_CODE_BY_NAME).map(([name, code]) => [code, name])
+);
+
 function findByTrn(trn) {
   return ROWS.find((r) => String(r.trn) === String(trn));
 }
@@ -218,7 +228,8 @@ function buildGeneral(row, indexSeed = 0) {
   const btcId = `SG01${custDigits}${row.product}0101`;
   const valueDate = row.relDate; // reuse release date for demo
 
-  return {
+  const ov = row.__generalOverrides || {};
+  const base = {
     ackNumber: Number(row.arn),
     submissionMode: SUBMISSION_LABEL[row.submissionMode] || row.submissionMode,
     btcId,
@@ -238,6 +249,8 @@ function buildGeneral(row, indexSeed = 0) {
     signatureVerified: indexSeed % 8 === 0,
     counterparty: row.counterparty,
   };
+
+  return { ...base, ...ov };
 }
 
 // ---------- Txn Exceptions helpers ----------
@@ -396,6 +409,67 @@ app.post("/workdesk", (req, res) => {
 
   ROWS.push(row);
   res.status(201).json(row);
+});
+
+// helper: pick only keys not persisted directly on ROW
+function pickOverrides(body) {
+  const direct = new Set([
+    "ackNumber", "submissionMode", "submissionBranch",
+    "clientReference", "counterparty", "valueDate"
+  ]);
+  const out = {};
+  for (const k of Object.keys(body || {})) {
+    if (!direct.has(k)) out[k] = body[k];
+  }
+  return out;
+}
+
+function applyGeneralPatch(row, body = {}) {
+  // ackNumber -> arn (string)
+  if ("ackNumber" in body) row.arn = String(body.ackNumber ?? "");
+
+  // submissionMode (label or code) -> row.submissionMode (code)
+  if ("submissionMode" in body) {
+    const given = String(body.submissionMode || "");
+    row.submissionMode =
+      SUBMISSION_CODE_BY_LABEL[given] || (SUBMISSION.includes(given) ? given : row.submissionMode);
+  }
+
+  // submissionBranch (code like SG01) -> bookingLocation (full name)
+  if ("submissionBranch" in body) {
+    const code = String(body.submissionBranch || "");
+    row.bookingLocation = BOOK_NAME_BY_CODE[code] || row.bookingLocation;
+  }
+
+  // valueDate -> relDate (keep same dd-MMM-yyyy format you use in UI)
+  if ("valueDate" in body) {
+    row.relDate = String(body.valueDate || row.relDate);
+  }
+
+  // simple direct mappings
+  if ("clientReference" in body) row.customerRef = String(body.clientReference ?? "");
+  if ("counterparty" in body) row.counterparty = String(body.counterparty ?? "");
+
+  // anything else goes into overrides
+  row.__generalOverrides = { ...(row.__generalOverrides || {}), ...pickOverrides(body) };
+
+  return buildGeneral(row, row.id);
+}
+
+// PATCH by TRN
+app.patch("/txn/:trn/general", (req, res) => {
+  const row = findByTrn(req.params.trn);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  const next = applyGeneralPatch(row, req.body);
+  return res.json(next);
+});
+
+// PATCH by ID
+app.patch("/txn/id/:id/general", (req, res) => {
+  const row = findById(req.params.id);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  const next = applyGeneralPatch(row, req.body);
+  return res.json(next);
 });
 
 // DELETE /workdesk/:id
@@ -604,6 +678,126 @@ app.get("/txn/id/:id/documents", (req, res) => {
   const row = findById(req.params.id);
   if (!row) return res.status(404).json({ error: "Not found" });
   return res.json(row.documents || buildDocuments(row));
+});
+
+
+function buildFinanceRequest(row) {
+  const baseAmt = (Number(row.id % 500) + 1000.24).toFixed(2);
+  return {
+    financeAmount: `SGD ${baseAmt}`,
+    financeTenorOption: "SFC - SPECIFIC TENOR",
+    financeTenorDays: 0,
+    financeEndDate: row.relDate,
+
+    principalAccountNumber: "SGD 123-456789-0",
+    principalFxRateSource: "TT",
+    principalFxContractNumber: "PX-" + row.id,
+    principalFxRate: "1.0000",
+
+    interestAccountNumber: "SGD 987-654321-0",
+    interestFxRateSource: "TT",
+    interestFxContractNumber: "IX-" + row.id,
+    interestFxRate: "1.0000",
+
+    collectionOption: "",
+    collectionPeriodicity: "",
+    baseRateType: "",
+    rateResetPeriodicity: "",
+    baseRate: "",
+    baseRateIndex: "",
+    indexTenor: "",
+    allInLP: "",
+    updateBaseRate: false,
+    baseRateMultiplier: "",
+    marginPercentage: "",
+    computationMethod: "",
+    applySpecialRolloverPricing: false,
+
+    ftpUpdateBaseRate: false,
+    ftpBaseRate: "",
+    ftpUpdateLP: false,
+    ftpContractualLP: "",
+    ftpBehaviouralLP: "",
+    ftpCostOfLiquidity: "",
+    ftpIncentivePremiumSubsidy: "",
+
+    disbFinanceAmount: `SGD ${baseAmt}`,
+    disbAmount: "SGD 0.00",
+    disbFxRateSource: "",
+    disbContractNumber: "",
+    disbFxRate: "",
+
+    bdiOverrideImport: false,
+    bdiAccountNumber: "",
+    bdiContractNumber: "",
+    bdiFxRateSource: "",
+    bdiFxRate: "",
+    bdiBalanceDebitAmount: ""
+  };
+}
+
+function buildFinanceProcessed(row) {
+  return {
+    financeNumber: "",
+    financeType: "",
+    financeAmount: `SGD ${(Number(row.id % 500) + 1200.18).toFixed(2)}`,
+    financeTenorDays: 0,
+    effectiveDate: row.regDate,
+    maturityDate: row.relDate,
+    financeEvent: "",
+    autoSettlement: false,
+    principalAccountNumber: "",
+    interestAccountNumber: "",
+    principalFxRateSource: "",
+    interestFxRateSource: "",
+    principalContractNumber: "",
+    interestContractNumber: "",
+    principalFxRate: "",
+    interestFxRate: "",
+
+    piCollectionOption: "",
+    piCollectionPeriodicity: "",
+    piBaseRateType: "",
+    piRateResetPeriodicity: "",
+    piBaseRateIndex: "",
+    piIndexTenor: "",
+    piBaseRate: "",
+    piAllInLP: "",
+    piBaseRateMultiplier: "",
+    piMarginPercentage: "",
+    piComputationMethod: "",
+
+    ftpBaseRate: "",
+    ftpContractualLP: "",
+    ftpBehaviouralLP: "",
+    ftpCostOfLiquidity: ""
+  };
+}
+
+// GET /txn/:trn/finances/request
+app.get("/txn/:trn/finances/request", (req, res) => {
+  const row = findByTrn(req.params.trn);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(buildFinanceRequest(row));
+});
+
+// GET /txn/:trn/finances/processed
+app.get("/txn/:trn/finances/processed", (req, res) => {
+  const row = findByTrn(req.params.trn);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(buildFinanceProcessed(row));
+});
+
+// Mirrors by id
+app.get("/txn/id/:id/finances/request", (req, res) => {
+  const row = findById(req.params.id);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(buildFinanceRequest(row));
+});
+app.get("/txn/id/:id/finances/processed", (req, res) => {
+  const row = findById(req.params.id);
+  if (!row) return res.status(404).json({ error: "Not found" });
+  return res.json(buildFinanceProcessed(row));
 });
 
 

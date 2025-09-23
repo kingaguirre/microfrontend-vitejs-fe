@@ -119,10 +119,9 @@ const EMPTY: DocumentsModel = {
 
 export default function DocumentsPane({
   onRegisterHandle,
-  disabled,
+  ...rest
 }: {
   onRegisterHandle?: (h: PaneHandle | null) => void
-  disabled?: boolean
 }) {
   const { txnNumber = '' } = useParams<{ txnNumber: string }>()
   const formRef = useRef<any>(null)
@@ -543,8 +542,8 @@ export default function DocumentsPane({
     <div className="text-sm text-red-600">{error}</div>
   ) : (
     <FormRenderer
+      {...rest}
       ref={formRef}
-      disabled={disabled}
       fieldSettings={fieldSettings}
       dataSource={values ?? EMPTY}
       onChange={handleChange}

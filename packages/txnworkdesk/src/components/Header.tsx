@@ -133,7 +133,7 @@ export default function Header({ className = '' }: Props) {
 
   return (
     <div
-      className={`flex items-center gap-3 px-2 bg-white rounded-sm border border-gray-200 mb-3 ${className}`}
+      className={`flex items-center gap-3 px-2 bg-white rounded-sm border border-gray-200 rounded-[2px] mb-3 ${className}`}
       // Always 52px tall
       style={{
         borderTop: `2px solid ${theme.colors.primary.base}`,
