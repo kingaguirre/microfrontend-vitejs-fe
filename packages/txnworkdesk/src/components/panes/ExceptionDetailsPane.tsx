@@ -20,16 +20,13 @@ type Props = {
 
 export default function ExceptionDetailsPane({ onRegisterHandle, disabled = false }: Props) {
   const { txnNumber = '' } = useParams<{ txnNumber: string }>()
-  const noopRef = useRef<PaneHandle>({
-    submit: () => {},
-    validate: () => true,
-    reset: () => {}
-  })
+  const formRef = useRef<any>(null)
 
   // register a no-op handle so footer buttons won’t explode
   useEffect(() => {
-    onRegisterHandle?.(noopRef.current)
-    return () => onRegisterHandle?.(null)
+    if (!onRegisterHandle) return
+    onRegisterHandle(formRef.current)
+    return () => onRegisterHandle(null)
   }, [onRegisterHandle])
 
   const columns: ColumnSetting[] = useMemo(

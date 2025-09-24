@@ -61,9 +61,13 @@ const MODULE_NAME = moduleConfig.moduleName
 
 export default function GeneralDetailsPane({
   onRegisterHandle,
+  onSuccess,
+  onError,
   ...rest
 }: {
   onRegisterHandle?: (h: PaneHandle | null) => void,
+  onSuccess?: (data: GeneralDetails, meta?: { source: 'fetch' | 'submit' }) => void,
+  onError?: (message: string, meta?: { source: 'fetch' | 'submit' }) => void,
 }) {
   const qc = useQueryClient()
   const { txnNumber = '' } = useParams<{ txnNumber: string }>()
@@ -72,9 +76,7 @@ export default function GeneralDetailsPane({
   // expose submit to SplitPanelLazy footer
   useEffect(() => {
     if (!onRegisterHandle) return
-    const handle: PaneHandle = {
-      submit: () => formRef.current?.submit?.()}
-    onRegisterHandle(handle)
+    onRegisterHandle(formRef.current)
     return () => onRegisterHandle(null)
   }, [onRegisterHandle])
 
@@ -111,7 +113,12 @@ export default function GeneralDetailsPane({
   }, [rowsGlobal, txnNumber, isNumeric])
 
   // ===== LOCAL STATE (only for this pane) =====
-  const [values, setValues] = useState<GeneralDetails | null>(cachedGeneral ?? (seedFromRow ? normalizeGeneral(seedFromRow) : null))
+  // Baseline used to seed the FormRenderer. Only change this when FETCH completes or after a successful SAVE.
+  const [baseline, setBaseline] = useState<GeneralDetails | null>(
+    cachedGeneral ?? (seedFromRow ? normalizeGeneral(seedFromRow) : null)
+  )
+  // Optional: keep a draft snapshot if you need it in the parent, but DO NOT pass it back to FormRenderer as dataSource.
+  const draftRef = useRef<GeneralDetails | null>(null)
   const [loadingFetch, setLoadingFetch] = useState<boolean>(false)
   const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
@@ -119,7 +126,7 @@ export default function GeneralDetailsPane({
 
   // keep values in sync when cachedGeneral arrives later
   useEffect(() => {
-    if (cachedGeneral) setValues(cachedGeneral)
+    if (cachedGeneral) setBaseline(cachedGeneral)
   }, [cachedGeneral])
 
   // fetch if we have no cached state yet
@@ -127,10 +134,12 @@ export default function GeneralDetailsPane({
     let cancelled = false
 
     if (!txnNumber) {
-      setError('Invalid transaction number')
-      setValues(null)
+      const msg = 'Invalid transaction number'
+      setError(msg)
+      setBaseline(null)
       setLoadingFetch(false)
       fetchedFor.current = null
+      onError?.(msg, { source: 'fetch' })
       return
     }
 
@@ -164,15 +173,20 @@ export default function GeneralDetailsPane({
         const raw = await apiGet<any>({ endpoint, queryKey: key })
         if (cancelled) return
         const normalized = normalizeGeneral(raw)
-        setValues(normalized)
+        setBaseline(normalized)
 
         // persist to global for cross-screen reuse
         const gs = useGlobalStore.getState()
         const prev: any = (gs.store as any)?.[MODULE_NAME] ?? {}
         const nextDetail = { ...(prev.detailByTrn ?? {}), [txnNumber]: { ...(prev.detailByTrn?.[txnNumber] ?? {}), general: normalized } }
         gs.setStateFor(MODULE_NAME, { ...prev, detailByTrn: nextDetail })
+        onSuccess?.(normalized, { source: 'fetch' })
       } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Failed to load general details')
+        const msg = e?.message || 'Failed to load general details'
+        if (!cancelled) {
+          setError(msg)
+          onError?.(msg, { source: 'fetch' })
+        }
       } finally {
         if (!cancelled) setLoadingFetch(false)
       }
@@ -289,7 +303,7 @@ export default function GeneralDetailsPane({
     []
   )
 
-  const handleChange = (v: any) => setValues(v)
+  const handleChange = (v: any) => draftRef.current = v
 
   const handleSubmit = async (res: any) => {
     // FormRenderer may return either raw values or a { valid, values, invalidFields, updated } envelope
@@ -329,7 +343,8 @@ export default function GeneralDetailsPane({
       const updated = await apiPatch<any>({ endpoint, data: v });
 
       const normalized = normalizeGeneral(updated);
-      setValues(normalized);
+      setBaseline(normalized);
+      draftRef.current = null;
 
       // Update global cache so other panes reflect changes
       const gs = useGlobalStore.getState();
@@ -352,8 +367,21 @@ export default function GeneralDetailsPane({
 
       // invalidate cache
       await qc.invalidateQueries({ queryKey: ['workdesk', MODULE_NAME, 'txn', 'catalog'] })
+      onSuccess?.(normalized, { source: 'submit' })  
+    } catch (e: any) {
+      const msg = e?.message || 'Failed to save general details'
+      setError(msg)
+      useAlertStore.setAlert({
+        title: 'Save failed',
+        content: msg,
+        color: 'danger',
+        icon: 'error_outline',
+        placement: 'top-right',
+        closeDelay: 5000,
+      })
+      onError?.(msg, { source: 'submit' })
     } finally {
-      setLoadingSubmit(false);
+      setLoadingSubmit(false)
     }
   };
 
@@ -364,7 +392,7 @@ export default function GeneralDetailsPane({
         disabled={loadingSubmit || (rest as any)?.disabled}
         ref={formRef}
         fieldSettings={fieldSettings}
-        dataSource={values ?? {}}
+        dataSource={baseline ?? {}}
         onChange={handleChange}
         onSubmit={handleSubmit}
         loading={loadingFetch}

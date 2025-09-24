@@ -23,16 +23,10 @@ export default function FinancesPane({
 
   // expose imperative handle to SplitPanel footer
   useEffect(() => {
-    if (!onRegisterHandle) return;
-    const handle: PaneHandle = {
-      submit: () => formRef.current?.submit?.(),
-      validate: () => formRef.current?.validate?.(),
-      getValues: () => formRef.current?.getValues?.(),
-      reset: () => formRef.current?.reset?.(),
-    };
-    onRegisterHandle(handle);
-    return () => onRegisterHandle(null);
-  }, [onRegisterHandle]);
+    if (!onRegisterHandle) return
+    onRegisterHandle(formRef.current)
+    return () => onRegisterHandle(null)
+  }, [onRegisterHandle])
 
   // fetch Request + Processed (both from the same TXN in server.js)
   useEffect(() => {

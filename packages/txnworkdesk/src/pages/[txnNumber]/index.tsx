@@ -75,6 +75,15 @@ export default function TxnDetails() {
         items={items}
         defaultActiveId="general"
         onChangeActiveId={() => setGloballyDisabled(true)}
+        onSuccess={({ id, data, source }) => {
+          // After success saving return to disable state
+          setGloballyDisabled(true)
+          // e.g., log, trigger a parent-level toast, update some context, etc.
+          console.log(`[${id}] ${source} success`, data)
+        }}
+        onError={({ id, error, source }) => {
+          console.warn(`[${id}] ${source} error:`, error)
+        }}
         // 1) add more buttons in the shared footer
         footerActions={[
           {
@@ -88,10 +97,10 @@ export default function TxnDetails() {
             key: 'save',
             label: 'Save',
             disabled: globallyDisabled,
-            onClick: async (val) => {
-              // const { handle } = val
+            onClick: async (helpers) => {
+              // const { handle } = helpers
               // const data = await handle?.submit?.() // call submit
-              console.log(val)
+              console.log(helpers)
             },
             color: 'success',
             width: 80

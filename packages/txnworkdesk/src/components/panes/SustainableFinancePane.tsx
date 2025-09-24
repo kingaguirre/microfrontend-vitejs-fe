@@ -40,10 +40,7 @@ export default function SustainableFinancePane({
   // Expose submit to SplitPanelLazy footer (match GeneralDetails)
   useEffect(() => {
     if (!onRegisterHandle) return
-    const handle: PaneHandle = {
-      submit: () => formRef.current?.submit?.()
-    }
-    onRegisterHandle(handle)
+    onRegisterHandle(formRef.current)
     return () => onRegisterHandle(null)
   }, [onRegisterHandle])
 

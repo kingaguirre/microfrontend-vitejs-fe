@@ -40,8 +40,8 @@ export type FooterAction = {
   label: string
   onClick: (api: {
     activeId: string | null
-    handle: PaneHandle<any, any> | null
-    submitActive: () => unknown | Promise<unknown>
+    form: PaneHandle<any, any> | null
+    closeForm: () => void
   }) => void | Promise<void>
   icon?: string
   color?: string
@@ -76,13 +76,26 @@ export interface SplitPanelLazyProps {
   disabledSubmit?: boolean
   footerActions?: FooterAction[]
   renderFooter?: (api: {
-    submitActive: () => void
     activeId: string | null
-    handle: PaneHandle | null
-    closeTo: () => void
+    form: PaneHandle | null
+    closeForm: () => void
   }) => React.ReactNode
   /** Props for loader-based panes; object or fn(info)=>object */
   paneProps?: PaneProps | ((info: PaneInfo) => PaneProps)
+  onSuccess?: (e: {
+    id: string
+    index: number
+    item: SplitItem
+    data: any
+    source?: 'fetch' | 'submit' | string
+  }) => void
+  onError?: (e: {
+    id: string
+    index: number
+    item: SplitItem
+    error: string
+    source?: 'fetch' | 'submit' | string
+  }) => void
 }
 
 type LoaderFn = () => Promise<{ default: React.ComponentType<any> }>
@@ -99,7 +112,9 @@ export function SplitPanelLazy({
   footerActions,
   renderFooter,
   paneProps,
-  disabledSubmit = false
+  disabledSubmit = false,
+  onSuccess,
+  onError
 }: SplitPanelLazyProps) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -159,7 +174,11 @@ export function SplitPanelLazy({
     activeHandleRef.current = null
   }, [selectedId])
 
-  const submitActive = () => activeHandleRef.current?.submit?.()
+  const submitActive = async () => {
+    const aa = await activeHandleRef.current?.submit?.()
+    console.log(aa)
+
+  }
 
   // ----- hotkeys -----
   const isTypingTarget = (el: EventTarget | null) => {
@@ -299,11 +318,21 @@ export function SplitPanelLazy({
       if (resolved.paneId == null) resolved.paneId = current.id
       if (resolved.paneIndex == null) resolved.paneIndex = index
 
+      // wrap emitters with pane context
+      const emitSuccess = (data: any, meta?: { source?: 'fetch' | 'submit' | string }) => {
+        onSuccess?.({ id: current.id, index, item: current, data, source: meta?.source })
+      }
+      const emitError = (error: string, meta?: { source?: 'fetch' | 'submit' | string }) => {
+        onError?.({ id: current.id, index, item: current, error, source: meta?.source })
+      }
+
       return (
         <LazyComp
           onRegisterHandle={(h: PaneHandle | null) => {
             activeHandleRef.current = h
           }}
+          onSuccess={emitSuccess}
+          onError={emitError}
           {...resolved}
         />
       )
@@ -313,7 +342,7 @@ export function SplitPanelLazy({
   }, [current, items, paneProps])
 
   // ----- Footer helpers -----
-  const closeTo = () => {
+  const closeForm = () => {
     const base = `/${String((moduleConfig as any)?.moduleName || '').replace(/^\/+/, '')}`
     navigate(base || '/')
   }
@@ -425,10 +454,9 @@ export function SplitPanelLazy({
       <div className="border-t bg-white px-3 py-2 mt-3 fixed bottom-0 right-[16px] left-[16px] rounded-[2px]">
         {typeof renderFooter === 'function' ? (
           renderFooter({
-            submitActive,
             activeId: selectedId ?? null,
-            handle: activeHandleRef.current,
-            closeTo
+            form: activeHandleRef.current,
+            closeForm
           })
         ) : (
           <div className="flex items-center justify-end gap-[8px]">
@@ -438,8 +466,8 @@ export function SplitPanelLazy({
                 onClick={() =>
                   a.onClick({
                     activeId: selectedId ?? null,
-                    handle: activeHandleRef.current,
-                    submitActive
+                    form: activeHandleRef.current,
+                    closeForm
                   })
                 }
                 icon={a.icon}
@@ -454,7 +482,7 @@ export function SplitPanelLazy({
             <Button onClick={submitActive} disabled={disabledSubmit} width={80}>
               Submit
             </Button>
-            <Button onClick={closeTo} variant="outlined" color="default">
+            <Button onClick={closeForm} variant="outlined" color="default">
               Close
             </Button>
           </div>

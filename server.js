@@ -68,19 +68,6 @@ const ROWS = [];
 const N = 4934;
 const base = Date.parse("2025-06-06T07:30:00Z");
 
-const fmt = (ms) =>
-  new Date(ms)
-    .toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZone: "UTC",
-    })
-    .replace(", ", ", ");
-
 for (let i = 0; i < N; i++) {
   const receivedAtMs = base + i * 57 * 60_000;
   const regMs = base + i * 37 * 60_000;
@@ -94,7 +81,7 @@ for (let i = 0; i < N; i++) {
     bookingLocation: BANKS[i % BANKS.length],
     workflowStage: STAGES[i % STAGES.length],
     submissionMode: SUBMISSION[i % SUBMISSION.length],
-    receivedAt: fmt(receivedAtMs),
+    receivedAt: new Date(receivedAtMs).toISOString(),
     __receivedAtMs: receivedAtMs,
     generatedBy: "System",
 
@@ -114,8 +101,8 @@ for (let i = 0; i < N; i++) {
     cocoa: tokenForIndex(i + 4),
     tdOpsApproval: "NULL",
     customerRef: i % 11 === 0 ? "NG-Adaptor-IIF6" : "NG-STPAdaptor-EIF",
-    regDate: fmt(regMs),
-    relDate: fmt(relMs),
+    regDate: new Date(regMs).toISOString().slice(0,10),
+    relDate: new Date(relMs).toISOString().slice(0,10),
     segment: "ME",
     subSegment: "03",
     splitId: String(251 + (i % 9)),
@@ -377,7 +364,7 @@ app.post("/workdesk", (req, res) => {
     bookingLocation: BANKS[id % BANKS.length],
     workflowStage: STAGES[id % STAGES.length],
     submissionMode: SUBMISSION[id % SUBMISSION.length],
-    receivedAt: fmt(now),
+     receivedAt: new Date(now).toISOString(),
     __receivedAtMs: now,
     generatedBy: "System",
 
@@ -396,8 +383,8 @@ app.post("/workdesk", (req, res) => {
     cocoa: tokenForIndex(id + 4),
     tdOpsApproval: "NULL",
     customerRef: id % 11 === 0 ? "NG-Adaptor-IIF6" : "NG-STPAdaptor-EIF",
-    regDate: fmt(now),
-    relDate: fmt(now + 3600_000),
+    regDate: new Date(now).toISOString().slice(0,10),
+    relDate: new Date(now + 3600_000).toISOString().slice(0,10),
     segment: "ME",
     subSegment: "03",
     splitId: String(251 + (id % 9)),
@@ -603,9 +590,9 @@ function buildDocuments(row) {
     || "SGD";
 
   const docNumber = `EIF_${row.id}_${String(row.customer).match(/\d+/)?.[0]?.slice(0,3) ?? "100" }xxxxxxxx`;
-  const issue = row.regDate;          // reuse demo dates
-  const due = row.relDate;
-  const maxMat = row.relDate;
+  const issue = new Date(row.__receivedAtMs).toISOString().slice(0,10);
+  const due = new Date(row.__receivedAtMs + 7*24*3600_000).toISOString().slice(0,10); // example +7d
+  const maxMat = due;
   const amt = 1978.05 + (row.id % 7); // deterministic(ish)
   const elig = Math.round((amt * 0.9) * 100) / 100;
 

@@ -4,6 +4,7 @@ import { FormRenderer } from 'react-components-lib.eaa'
 import { apiGet } from '@app/common'
 import moduleConfig from '../../module.config.json'
 import type { PaneHandle } from '../../components/SplitPanelLazy'
+import { DangerInfoBox } from './GeneralDetailsPane'
 
 type DocDetailRow = {
   number: string
@@ -134,7 +135,7 @@ export default function DocumentsPane({
   // expose only submit (same pattern you asked for)
   useEffect(() => {
     if (!onRegisterHandle) return
-    onRegisterHandle({ submit: () => formRef.current?.submit?.() })
+    onRegisterHandle(formRef.current)
     return () => onRegisterHandle(null)
   }, [onRegisterHandle])
 
@@ -193,7 +194,7 @@ export default function DocumentsPane({
                 name: 'batchAmountCurrency',
                 label: 'Batch Amount (Currency)',
                 type: 'dropdown',
-                options: [{ label: 'SGD', value: 'SGD' }, { label: 'MYR', value: 'MYR' }, { label: 'HKD', value: 'HKD' }],
+                options: [{ text: 'SGD', value: 'SGD' }, { text: 'MYR', value: 'MYR' }, { text: 'HKD', value: 'HKD' }],
               },
               {
                 name: 'batchAmount',
@@ -215,7 +216,7 @@ export default function DocumentsPane({
                 name: 'maxEligibleCurrency',
                 label: 'Max Eligible Finance Amount (Cur)',
                 type: 'dropdown',
-                options: [{ label: 'SGD', value: 'SGD' }, { label: 'MYR', value: 'MYR' }, { label: 'HKD', value: 'HKD' }],
+                options: [{ text: 'SGD', value: 'SGD' }, { text: 'MYR', value: 'MYR' }, { text: 'HKD', value: 'HKD' }],
               },
               {
                 name: 'maxEligibleAmount',
@@ -228,7 +229,7 @@ export default function DocumentsPane({
                 name: 'batchAdjustmentCurrency',
                 label: 'Batch Adjustment Amount (Cur)',
                 type: 'dropdown',
-                options: [{ label: 'SGD', value: 'SGD' }, { label: 'MYR', value: 'MYR' }, { label: 'HKD', value: 'HKD' }],
+                options: [{ text: 'SGD', value: 'SGD' }, { text: 'MYR', value: 'MYR' }, { text: 'HKD', value: 'HKD' }],
               },
               {
                 name: 'batchAdjustmentAmount',
@@ -284,7 +285,7 @@ export default function DocumentsPane({
                   },
                   fields: [
                     { name: 'number', label: 'Number', type: 'text', placeholder: 'Enter number', validation: (z: any) => z.string().min(1) },
-                    { name: 'currency', label: 'Currency', type: 'dropdown', options: [{ label: 'SGD', value: 'SGD' }, { label: 'MYR', value: 'MYR' }, { label: 'HKD', value: 'HKD' }] },
+                    { name: 'currency', label: 'Currency', type: 'dropdown', options: [{ text: 'SGD', value: 'SGD' }, { text: 'MYR', value: 'MYR' }, { text: 'HKD', value: 'HKD' }] },
                     { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Enter amount', validation: (z: any) => z.number().positive() },
                     { name: 'issueDate', label: 'Document Issue Date', type: 'date' },
                     { name: 'dueDate', label: 'Due Date', type: 'date' },
@@ -310,7 +311,7 @@ export default function DocumentsPane({
                 name: 'documentAmountCurrency',
                 label: 'Document Amount (Cur)',
                 type: 'dropdown',
-                options: [{ label: 'SGD', value: 'SGD' }, { label: 'MYR', value: 'MYR' }, { label: 'HKD', value: 'HKD' }],
+                options: [{ text: 'SGD', value: 'SGD' }, { text: 'MYR', value: 'MYR' }, { text: 'HKD', value: 'HKD' }],
               },
               {
                 name: 'documentAmount',
@@ -323,7 +324,7 @@ export default function DocumentsPane({
                 name: 'adjustmentAmountCurrency',
                 label: 'Adjustment Amount (Cur)',
                 type: 'dropdown',
-                options: [{ label: 'SGD', value: 'SGD' }, { label: 'MYR', value: 'MYR' }, { label: 'HKD', value: 'HKD' }],
+                options: [{ text: 'SGD', value: 'SGD' }, { text: 'MYR', value: 'MYR' }, { text: 'HKD', value: 'HKD' }],
               },
               {
                 name: 'adjustmentAmount',
@@ -359,9 +360,9 @@ export default function DocumentsPane({
                 type: 'dropdown',
                 placeholder: 'Select Option',
                 options: [
-                  { label: 'NET 30', value: 'NET30' },
-                  { label: 'NET 45', value: 'NET45' },
-                  { label: 'NET 60', value: 'NET60' },
+                  { text: 'NET 30', value: 'NET30' },
+                  { text: 'NET 45', value: 'NET45' },
+                  { text: 'NET 60', value: 'NET60' },
                 ],
                 validation: (z: any) => z.string().required('Payment Terms is mandatory'),
               },
@@ -378,16 +379,16 @@ export default function DocumentsPane({
                 type: 'dropdown',
                 placeholder: 'Select Option',
                 options: [
-                  { label: 'EXW', value: 'EXW' },
-                  { label: 'FOB', value: 'FOB' },
-                  { label: 'CIF', value: 'CIF' },
+                  { text: 'EXW', value: 'EXW' },
+                  { text: 'FOB', value: 'FOB' },
+                  { text: 'CIF', value: 'CIF' },
                 ],
               },
               {
                 name: 'eligibleAmountCurrency',
                 label: 'Eligible Amount (Cur)',
                 type: 'dropdown',
-                options: [{ label: 'SGD', value: 'SGD' }, { label: 'MYR', value: 'MYR' }, { label: 'HKD', value: 'HKD' }],
+                options: [{ text: 'SGD', value: 'SGD' }, { text: 'MYR', value: 'MYR' }, { text: 'HKD', value: 'HKD' }],
               },
               {
                 name: 'eligibleAmount',
@@ -408,9 +409,9 @@ export default function DocumentsPane({
                 type: 'dropdown',
                 placeholder: 'Select Option',
                 options: [
-                  { label: 'Approved', value: 'APPR' },
-                  { label: 'Pending', value: 'PEND' },
-                  { label: 'Rejected', value: 'REJ' },
+                  { text: 'Approved', value: 'APPR' },
+                  { text: 'Pending', value: 'PEND' },
+                  { text: 'Rejected', value: 'REJ' },
                 ],
                 validation: (z: any) => z.string().required('Document Approval Status is mandatory'),
               },
@@ -420,8 +421,8 @@ export default function DocumentsPane({
                 type: 'dropdown',
                 placeholder: 'Select Option',
                 options: [
-                  { label: 'None', value: '' },
-                  { label: 'Override', value: 'OVR' },
+                  { text: 'None', value: '' },
+                  { text: 'Override', value: 'OVR' },
                 ],
                 validation: (z: any) => z.string().required('Override Doc Status is mandatory'),
               },
@@ -512,7 +513,7 @@ export default function DocumentsPane({
               },
               fields: [
                 { name: 'percentage', label: 'Percentage', type: 'number', placeholder: 'Enter Percentage', validation: (z: any) => z.number().positive() },
-                { name: 'currency', label: 'Currency', type: 'dropdown', options: [{ label: 'SGD', value: 'SGD' }, { label: 'MYR', value: 'MYR' }, { label: 'HKD', value: 'HKD' }] },
+                { name: 'currency', label: 'Currency', type: 'dropdown', options: [{ text: 'SGD', value: 'SGD' }, { text: 'MYR', value: 'MYR' }, { text: 'HKD', value: 'HKD' }] },
                 { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Enter Amount', validation: (z: any) => z.number().positive() },
                 { name: 'dueDate', label: 'Due Date', type: 'date', placeholder: 'Select Date', validation: (z: any) => z.string().min(1) },
                 { name: 'eligibleAmount', label: 'Eligible Amount', type: 'number', placeholder: 'Enter Amount', validation: (z: any) => z.number().positive() },
@@ -538,17 +539,18 @@ export default function DocumentsPane({
     }
   }
 
-  return error ? (
-    <div className="text-sm text-red-600">{error}</div>
-  ) : (
-    <FormRenderer
-      {...rest}
-      ref={formRef}
-      fieldSettings={fieldSettings}
-      dataSource={values ?? EMPTY}
-      onChange={handleChange}
-      onSubmit={handleSubmit}
-      loading={loadingFetch || loadingSubmit}
-    />
+  return (
+    <>
+      <FormRenderer
+        {...rest}
+        ref={formRef}
+        fieldSettings={fieldSettings}
+        dataSource={values ?? EMPTY}
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+        loading={loadingFetch || loadingSubmit}
+      />
+      {error && <DangerInfoBox message={error} />}
+    </>
   )
 }
