@@ -69,7 +69,7 @@ export default function FxRateMaintenance() {
   return (
     <ModuleContainer title="FX Rate Maintenance" onBack={() => history.back()} showFooter>
       {/* Filters */}
-      <Panel title="FX Rate Maintenance" hasShadow={false}>
+      <Panel title="FX Rate Maintenance" hideShadow>
         <Grid spacing={16}>
           <GridItem xs={12} md={3}>
             <Dropdown

@@ -63,7 +63,6 @@ export default function SubMenuStoreDemo() {
     }
   }
 
-  // Replace submenu entirely
   const handleReplace = () => {
     const items = buildItems()
     if (items) {

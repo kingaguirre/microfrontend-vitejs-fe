@@ -510,7 +510,7 @@ export default function GlobalParty() {
 
   return (
     <ModuleContainer title="Global Party" onBack={() => history.back()} showFooter>
-      <Panel title="Global Party" hasShadow={false}>
+      <Panel title="Global Party" hideShadow>
         <Grid spacing={16}>
           <GridItem xs={12} md={6}>
             <FormControl

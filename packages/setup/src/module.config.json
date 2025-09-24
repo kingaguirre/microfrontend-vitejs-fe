@@ -1,7 +1,7 @@
 {
   "moduleName": "setup",
   "pageTitle": "Setup",
-  "apiBaseUrl": "https://workdesk-api.onrender.com",
+  "apiBaseUrl": "http://localhost:4000",
   "config": {
     "menuIcon": "settings",
     "navigateKey": "s",

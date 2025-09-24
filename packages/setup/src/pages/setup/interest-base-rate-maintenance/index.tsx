@@ -116,7 +116,7 @@ export default function InterestBaseRateMaintenance() {
         {/* right content */}
         <div className="col-span-12 md:col-span-9">
           {/* Filters panel */}
-          <Panel title={MODULES[activeModule]} hasShadow={false}>
+          <Panel title={MODULES[activeModule]} hideShadow>
             <Grid spacing={16}>
               <GridItem xs={12} md={4}>
                 <Dropdown
@@ -172,7 +172,7 @@ export default function InterestBaseRateMaintenance() {
           </Panel>
 
           {/* Results panel */}
-          <Panel title="Enquirer Catalog" hasShadow={false}>
+          <Panel title="Enquirer Catalog" hideShadow>
             <DataTable columnSettings={COLUMNS} dataSource={rows} />
           </Panel>
         </div>

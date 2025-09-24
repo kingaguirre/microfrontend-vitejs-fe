@@ -36,7 +36,7 @@ export default function ClauseEnquiry() {
 
   return (
     <ModuleContainer title="Clause Enquiry" onBack={() => history.back()} showFooter>
-      <Panel title="Clause Enquiry Details" hasShadow={false}>
+      <Panel title="Clause Enquiry Details" hideShadow>
         <div className="mb-4">
           <Grid spacing={16}>
             {/* Row 1: Search + actions */}

@@ -313,6 +313,7 @@ export default function ChordHUD() {
           </div>
         </div>
       </div>
-    </div>, document.body
+    </div>,
+    document.body
   )
 }

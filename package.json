@@ -8,7 +8,7 @@
     "axios": "^1.9.0",
     "graphql": "^16.11.0",
     "graphql-request": "^7.2.0",
-    "react-components-lib.eaa": "^1.0.6",
+    "react-components-lib.eaa": "file:../react-components/react-components-lib.eaa-1.0.6.tgz",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

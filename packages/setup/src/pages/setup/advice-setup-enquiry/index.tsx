@@ -243,7 +243,7 @@ export default function AdviceSetupEnquiry() {
 
   return (
     <ModuleContainer title="Advice Setup Enquiry" onBack={() => history.back()}>
-      <Panel hasShadow={false}>
+      <Panel hideShadow>
         {/* ---- Filters outside FormRenderer ---- */}
         <Grid spacing={16}>
           <GridItem xs={12} md={3}>

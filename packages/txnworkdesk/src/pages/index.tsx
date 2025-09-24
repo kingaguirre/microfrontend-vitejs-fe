@@ -1,78 +1,12 @@
 // packages/txnworkdesk/src/pages/index.tsx
 import { useMemo, useState } from 'react'
-import { DataTable, Icon, theme, Tooltip, Button } from 'react-components-lib.eaa'
+import { DataTable, Icon, theme, Tooltip, Button, exportRows } from 'react-components-lib.eaa'
 import type { ColumnSetting, HeaderRightElement } from 'react-components-lib.eaa'
 import moduleConfig from '../module.config.json'
 import { apiGet, apiPatch, MainPageContainer, MAIN_PAGE_TABLE_HEIGHT } from '@app/common'
 import { useQueryClient } from '@tanstack/react-query'
-
-/* ---------------------- export util (CSV/XLSX) ---------------------- */
-export type ExportColumn = { column: string; title: string }
-type ExportOpts = { fileName?: string; format?: 'xlsx' | 'csv'; sheetName?: string }
-
-export async function exportRows(
-  rows: any[],
-  columns: ExportColumn[],
-  opts: ExportOpts = {}
-): Promise<void> {
-  const fileName = (opts.fileName || 'export').trim() || 'export'
-  const format = opts.format || 'xlsx'
-  const sheetName = opts.sheetName || 'Data'
-
-  const header = columns.map((c) => c.title)
-  const body = (Array.isArray(rows) ? rows : []).map((r) =>
-    columns.map((c) => {
-      const v = (r as any)?.[c.column]
-      if (Array.isArray(v)) return v.map((x) => (x == null ? '' : String(x))).join(',')
-      if (v == null) return ''
-      return v instanceof Date ? v.toISOString() : v
-    })
-  )
-  const aoa: any[][] = [header, ...body]
-
-  const safeBase = fileName.replace(/\.(xlsx|csv)$/i, '')
-  const dl = (blob: Blob, ext: 'xlsx' | 'csv') => {
-    const a = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    a.href = url
-    a.download = `${safeBase}.${ext}`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
-  if (format === 'csv') {
-    const esc = (val: any) => {
-      const s = val == null ? '' : String(val)
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-    }
-    const csv = aoa.map((row) => row.map(esc).join(',')).join('\n')
-    dl(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'csv')
-    return
-  }
-
-  const getExcelJS = async () => {
-    try {
-      const mod = await import(/* @vite-ignore */ 'exceljs')
-      return (mod as any).default ?? (mod as any)
-    } catch {
-      const g = (window as any)?.ExcelJS
-      if (g) return g
-      throw new Error('ExcelJS not found.')
-    }
-  }
-  const ExcelJS = await getExcelJS()
-  const wb = new ExcelJS.Workbook()
-  const ws = wb.addWorksheet(sheetName)
-  ws.addRows(aoa)
-  const buf: ArrayBuffer = await wb.xlsx.writeBuffer()
-  dl(
-    new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
-    'xlsx'
-  )
-}
-/* -------------------------------------------------------------------- */
+import ModuleLink from '../components/ModuleLink'
+import { useGlobalStore } from '@app/common'
 
 type Row = {
   id: number
@@ -99,6 +33,9 @@ type Row = {
   subSegment: string
   splitId: string
 }
+
+// Use the module's name as the cross-module slice key (e.g. "txnworkdesk")
+const GLOBAL_SLICE_KEY: string = moduleConfig.moduleName
 
 // helper: N random digits as a string, zero-padded
 const randomDigits = (len: number = 6): string => {
@@ -190,12 +127,15 @@ export default function TxnWorkDesk() {
         minWidth: 180,
         pin: 'pin',
         cell: ({ rowValue }: any) => (
-          <a
+          <ModuleLink
+            to={`/${encodeURIComponent(rowValue.trn)}`}
             className="underline decoration-dotted hover:opacity-80"
             style={{ color: theme.colors.primary.base }}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()} // don't trigger row click
+            aria-label={`Open transaction ${rowValue.trn}`}
           >
             {rowValue.trn}
-          </a>
+          </ModuleLink>
         )
       },
       { column: 'customer', title: 'CUSTOMER', minWidth: 280 },
@@ -316,6 +256,12 @@ export default function TxnWorkDesk() {
     []
   )
 
+  const commitTxnWorkdeskToGlobal = (patch: any) => {
+    const gs = useGlobalStore.getState()
+    const prev = (gs.store as any)?.[GLOBAL_SLICE_KEY] ?? {}
+    gs.setStateFor(GLOBAL_SLICE_KEY, { ...prev, ...patch })
+  }
+
   const server = useMemo(
     () => ({
       debounceMs: 300,
@@ -340,6 +286,7 @@ export default function TxnWorkDesk() {
           'workdesk',
           moduleConfig.moduleName,
           'txn',
+          'catalog',
           {
             pageIndex,
             pageSize,
@@ -360,6 +307,24 @@ export default function TxnWorkDesk() {
           queryKey: key
         })
 
+        commitTxnWorkdeskToGlobal({
+          rows: (data as any)?.rows ?? [],
+          total: (data as any)?.total ?? 0,
+          lastQuery: {
+            pageIndex,
+            pageSize,
+            sortBy,
+            order,
+            columnFilters,
+            q: globalFilter ?? '',
+            trnSearch,
+            hideAcr,
+            savedFilter,
+            status: 'ALL'
+          },
+          lastFetchedAt: new Date().toISOString()
+        })
+
         return data
       }
     }),
@@ -378,7 +343,7 @@ export default function TxnWorkDesk() {
           key: 'server-all',
           icon: 'cloud_download',
           label: 'Download ALL from server',
-          onClick: async ({ fileName, format }: { fileName: string; format: 'xlsx' | 'csv' }) => {
+          onClick: async ({ fileName, format }: any) => {
             const params: any = {
               limit: 0,
               skip: 0,
@@ -391,7 +356,7 @@ export default function TxnWorkDesk() {
               endpoint: '/workdesk/search',
               params
             })
-            await exportRows(data.rows, columns as unknown as ExportColumn[], { fileName, format })
+            await exportRows(data.rows, columns, { fileName, format })
           }
         }
       ]
@@ -417,7 +382,7 @@ export default function TxnWorkDesk() {
     }
   }
 
-  const headerRightElements: HeaderRightElement[] = [
+  const headerLeftElements: HeaderRightElement[] = [
     {
       type: 'checkbox',
       text: 'Hide ACR Steps',
@@ -454,7 +419,7 @@ export default function TxnWorkDesk() {
       color: 'warning',
       disabled: isPatching,
       icon: 'edit',
-      onClick: patchArn2500001 // ← single local function
+      onClick: patchArn2500001
     }
   ]
 
@@ -468,7 +433,8 @@ export default function TxnWorkDesk() {
         enableGlobalFiltering
         enableDownload
         downloadControls={downloadControls}
-        headerRightElements={headerRightElements}
+        hideClearAllFiltersButton
+        headerLeftElements={headerLeftElements}
         pageSize={20}
       />
     </MainPageContainer>
