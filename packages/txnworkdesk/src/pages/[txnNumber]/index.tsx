@@ -89,7 +89,10 @@ export default function TxnDetails() {
           {
             key: 'edit',
             label: globallyDisabled ? 'Edit' : 'Cancel',
-            onClick: () => setGloballyDisabled(!globallyDisabled),
+            onClick: ({ form }) => {
+              form?.reset?.();
+              setGloballyDisabled(!globallyDisabled)
+            },
             variant: 'outlined',
             color: 'default'
           },

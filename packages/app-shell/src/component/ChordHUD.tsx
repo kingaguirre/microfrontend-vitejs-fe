@@ -6,14 +6,27 @@ import { useAllMergedConfigs } from '@app/common'
 import { createPortal } from 'react-dom'
 
 type RouteMap = Partial<Record<string, string>>
-type ChordOpener = { ctrl?: boolean; meta?: boolean; code: string }
+type ChordOpener = { alt?: boolean; code: string }
+
+// ── Platform helpers ──────────────────────────────────────────────────────────
+function isMac(): boolean {
+  try {
+    const p =
+      // @ts-ignore
+      (navigator.userAgentData && navigator.userAgentData.platform) ||
+      navigator.platform ||
+      ''
+    return /Mac|iPhone|iPad|iPod/.test(p)
+  } catch {
+    return false
+  }
+}
+const IS_MAC = isMac()
 
 // ── Static behavior ───────────────────────────────────────────────────────────
 const STATIC_CHORD_OPENERS: ChordOpener[] = [
-  { ctrl: true, code: 'Period' }, // Ctrl + .
-  { meta: true, code: 'Period' } // ⌘ + .
+  { alt: true, code: 'Period' } // Alt/Option + .
 ]
-const STATIC_CHORD_LABEL = 'Ctrl + .'
 const STATIC_SHOW = true
 const STATIC_LINGER_MS = 1200
 
@@ -105,14 +118,15 @@ export default function ChordHUD() {
   const openedByChordRef = useRef(false)
   const disarmTid = useRef<number | null>(null)
 
+  const chordLabel = useMemo(() => (IS_MAC ? '⌥ + .' : 'Alt + .'), [])
   const hintText = useMemo(() => {
     const letters = Object.keys(ROUTES)
       .sort((a, b) =>
         a === HOME_KEY_DISPLAY ? -1 : b === HOME_KEY_DISPLAY ? 1 : a.localeCompare(b)
       )
       .join(' ')
-    return `${STATIC_CHORD_LABEL} then press: ${letters}`
-  }, [ROUTES])
+    return `${chordLabel} then press: ${letters}`
+  }, [ROUTES, chordLabel])
 
   const clearTimer = () => {
     if (disarmTid.current !== null) {
@@ -146,10 +160,10 @@ export default function ChordHUD() {
 
   const matchesOpener = (e: KeyboardEvent) =>
     STATIC_CHORD_OPENERS.some((o) => {
-      if (o.ctrl && !e.ctrlKey) return false
-      if (o.meta && !e.metaKey) return false
-      if (!o.ctrl && e.ctrlKey) return false
-      if (!o.meta && e.metaKey) return false
+      if (o.alt && !e.altKey) return false
+      if (!o.alt && e.altKey) return false
+      // Disallow extra modifiers
+      if (e.ctrlKey || e.metaKey) return false
       return e.code === o.code
     })
 
@@ -209,8 +223,8 @@ export default function ChordHUD() {
 
     const onKeyUp = (e: KeyboardEvent) => {
       if (!armed) return
-      // Keep HUD visible as long as Ctrl/Meta is still held.
-      const modifiersStillDown = e.ctrlKey || e.metaKey
+      // Keep HUD visible as long as Alt/Option is still held.
+      const modifiersStillDown = e.altKey
       if (!modifiersStillDown) {
         scheduleDisarm()
       }
@@ -244,7 +258,7 @@ export default function ChordHUD() {
     transform: open ? 'translateY(0px) scale(1)' : 'translateY(8px) scale(0.985)',
     transition: 'transform 220ms cubic-bezier(.2,.75,.25,1), opacity 200ms ease',
     willChange: 'transform, opacity',
-    maxWidth: 480, // ⬅ smaller panel width
+    maxWidth: 480,
     width: 'calc(100vw - 32px)'
   }
 
@@ -273,8 +287,7 @@ export default function ChordHUD() {
         <div className="text-xs">
           <div className="mb-1.5 opacity-90">
             <span className="font-semibold">Quick switch</span> — hold{' '}
-            <span className="font-semibold">{STATIC_CHORD_LABEL}</span> then press a key, or click a
-            pill.
+            <span className="font-semibold">{chordLabel}</span> then press a key, or click a pill.
           </div>
 
           {/* Pills: Home first; text left; hover restored; ellipsis safe */}

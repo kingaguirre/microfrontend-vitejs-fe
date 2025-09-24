@@ -4,6 +4,21 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ModuleLink from '../components/ModuleLink'
 import { Icon, Button, FormControl, theme, Panel } from 'react-components-lib.eaa'
 
+// Platform helpers for Alt vs Option label
+const IS_MAC = (() => {
+  try {
+    const p =
+      // @ts-ignore
+      (navigator.userAgentData && navigator.userAgentData.platform) ||
+      navigator.platform ||
+      ''
+    return /Mac|iPhone|iPad|iPod/.test(p)
+  } catch {
+    return false
+  }
+})()
+const SEARCH_CHORD_LABEL = IS_MAC ? '⌥ + K' : 'Alt + K'
+
 /** ---------- Types ---------- */
 export type MenuNode = {
   id: string
@@ -126,6 +141,7 @@ export default function ModernMenuHub({
   // ---------- Search keyboard + shortcuts ----------
   const searchId = 'menuhub-search'
   const listRef = useRef<HTMLDivElement | null>(null)
+  const searchWrapRef = useRef<HTMLDivElement | null>(null)
 
   const focusSearch = useCallback(() => {
     ;(document.getElementById(searchId) as HTMLInputElement | null)?.focus()
@@ -133,16 +149,35 @@ export default function ModernMenuHub({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyK') {
         e.preventDefault()
         focusSearch()
         setSearchOpen(true)
       }
       if (e.key === 'Escape') setSearchOpen(false)
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKey, { capture: true })
+    return () => window.removeEventListener('keydown', onKey, { capture: true } as any)
   }, [focusSearch])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!searchOpen) return
+    const onDocPointerDown = (e: Event) => {
+      const wrap = searchWrapRef.current
+      if (!wrap) return
+      const target = e.target as Node | null
+      if (target && wrap.contains(target)) return
+      setSearchOpen(false)
+    }
+    // capture=true so we get the event before inner handlers
+    window.addEventListener('pointerdown', onDocPointerDown, true)
+    window.addEventListener('click', onDocPointerDown, true)
+    return () => {
+      window.removeEventListener('pointerdown', onDocPointerDown, true)
+      window.removeEventListener('click', onDocPointerDown, true)
+    }
+  }, [searchOpen])
 
   const onSearchKeyDown = (e: React.KeyboardEvent) => {
     if (!searchOpen) return
@@ -273,12 +308,12 @@ export default function ModernMenuHub({
             </div>
             <div className="text-xs text-gray-600">
               Find a setting fast — press{' '}
-              <span className="px-1 rounded bg-gray-100 border">Ctrl/⌘+K</span> to search
+              <span className="px-1 rounded bg-gray-100 border">{SEARCH_CHORD_LABEL}</span> to search
             </div>
           </div>
 
           {/* Search box */}
-          <div className="ml-auto flex items-center gap-2 w-[min(520px,80vw)] relative">
+          <div ref={searchWrapRef} className="ml-auto flex items-center gap-2 w-[min(520px,80vw)] relative">
             <FormControl
               id={searchId}
               type="text"
@@ -286,9 +321,11 @@ export default function ModernMenuHub({
               onFocus={() => setSearchOpen(true)}
               onKeyDown={onSearchKeyDown}
               onChange={handleSearchChange}
-              placeholder="Search menus, e.g. Product Details… (Ctrl/⌘+K)"
+              placeholder={`Search menus, e.g. Product Details… (${SEARCH_CHORD_LABEL})`}
               iconRight={[{ icon: 'search' }]}
-              className="w-full shadow-sm rounded-2xl"
+              className="w-full"
+              rounded
+              size="lg"
             />
 
             {/* Search dropdown */}

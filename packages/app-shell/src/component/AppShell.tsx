@@ -16,7 +16,6 @@ import './shell.css'
 import { RouteLoader } from './RouteLoader'
 import Offline from '../Offline'
 import { AlertContainer } from './AlertContainer'
-import ChordHUD from './ChordHUD'
 
 const DEFAULT_APP_TITLE = 'TradeXpress'
 
@@ -350,8 +349,6 @@ export default function Shell({
       >
         {/* mount the central AlertContainer */}
         <AlertContainer />
-
-        <ChordHUD />
 
         {initialOnline ? (
           <>

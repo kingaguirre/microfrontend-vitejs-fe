@@ -108,7 +108,7 @@ export function SplitPanelLazy({
   onMenuChange,
   leftWidth = 240,
   header,
-  activationHotkey = { key: '/', ctrl: true, label: 'Ctrl+/' },
+  activationHotkey = { key: '/', alt: true, label: 'Alt+/' },
   footerActions,
   renderFooter,
   paneProps,
@@ -204,6 +204,8 @@ export function SplitPanelLazy({
       if (!activationHotkey.alt && e.altKey) return false
       if (activationHotkey.shift && !e.shiftKey) return false
       if (!activationHotkey.shift && e.shiftKey) return false
+      // Use layout-independent code for "/" so Option/ works on macOS
+      if (activationHotkey.key === '/' && (e as any).code) return (e as any).code === 'Slash'
       return e.key.toLowerCase() === activationHotkey.key.toLowerCase()
     },
     [activationHotkey]
@@ -258,10 +260,10 @@ export function SplitPanelLazy({
       }
     }
 
-    window.addEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKey, { capture: true })
     window.addEventListener('keydown', onNavArrows, { capture: true })
     return () => {
-      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keydown', onKey, { capture: true } as any)
       window.removeEventListener('keydown', onNavArrows, { capture: true } as any)
     }
   }, [items, navActive, matchHotkey, selectedId, highlightId])
