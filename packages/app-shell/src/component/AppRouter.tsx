@@ -7,6 +7,7 @@ import NotFound from '../NotFound'
 import Home from '../Home'
 import type { RouteObject } from 'react-router-dom'
 import { Loader } from 'react-components-lib.eaa'
+import ChordHUD from './ChordHUD'
 
 interface AppRouterProps {
   moduleName?: string
@@ -102,6 +103,7 @@ export default function AppRouter({ moduleName, menuItems = [], routes }: AppRou
       <Suspense
         fallback={<Loader size="md" appendTo=".app-shell-main-content" label="Loading..." />}
       >
+        <ChordHUD />
         <Routes>{renderRoutes(appRoutes)}</Routes>
       </Suspense>
     </BrowserRouter>
